@@ -21,7 +21,7 @@ from auditabr.acquisition import RemoteZipReader
 from auditabr.catalog import Catalog
 from auditabr.utils import read_json, sha256, utcnow, write_json
 
-UFS = ['BA', 'SP', 'MG', 'RJ', 'PR', 'RS', 'PE', 'CE', 'PA', 'SC']
+UFS = ['BA', 'SP', 'MG', 'RJ', 'PR', 'RS', 'PE', 'CE', 'PA', 'SC', 'MA']
 OUT = Path('research/bu')
 MUN = Path('research/catalogo-municipais')
 CATS = {2012: MUN, 2016: MUN, 2020: MUN, 2024: MUN,

@@ -12,7 +12,7 @@ import pyarrow.csv as csv
 from auditabr.acquisition import RemoteZipReader
 from auditabr.catalog import Catalog
 
-UFS = ['BA', 'SP', 'MG', 'RJ', 'PR', 'RS', 'PE', 'CE', 'PA', 'SC']
+UFS = ['BA', 'SP', 'MG', 'RJ', 'PR', 'RS', 'PE', 'CE', 'PA', 'SC', 'MA']
 CATS = {2018: 'research/catalogo-2014-2018', 2022: 'research/bahia-presidente-2022-2026', 2026: 'research/bahia-presidente-2022-2026'}
 OUT = Path('research/perfil')
 

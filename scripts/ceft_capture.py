@@ -13,7 +13,7 @@ from auditabr.acquisition import RemoteZipReader
 from auditabr.catalog import Catalog
 from auditabr.utils import write_json, utcnow
 
-UFS = ['BA', 'SP', 'MG', 'RJ', 'PR', 'RS', 'PE', 'CE', 'PA', 'SC']
+UFS = ['BA', 'SP', 'MG', 'RJ', 'PR', 'RS', 'PE', 'CE', 'PA', 'SC', 'MA']
 CATS = {2012: 'research/catalogo-municipais', 2014: 'research/catalogo-2014-2018', 2016: 'research/catalogo-municipais', 2018: 'research/catalogo-2014-2018',
         2020: 'research/catalogo-municipais', 2022: 'research/bahia-presidente-2022-2026', 2024: 'research/catalogo-municipais', 2026: 'research/bahia-presidente-2022-2026'}
 OUT = Path('research/ceft')

@@ -170,27 +170,39 @@ def flags(d):
 
 
 def perm_test(d, flag, y='diff_ab', reps=REPS):
+    """Diferença (A − B) entre seções sinalizadas e não sinalizadas, medida como desvio da média PONDERADA do próprio local.
+    Dois esquemas de embaralhamento da sinalização: dentro do município (colunas sem sufixo) e dentro do local de votação (sufixo _local).
+    Além do DP, devolve média e quantis 2,5%/97,5% do nulo, para desenhar a faixa do acaso centrada no nulo e não no efeito observado."""
     g = d[d[y].notna() & (d.eligible >= 50) & d.valid_votes.gt(0)].copy()
-    g['yr'] = g[y] - g.groupby('place')[y].transform('mean')
+    w = g.valid_votes.astype(float)
+    wmean = (g[y] * w).groupby(g.place).transform('sum') / w.groupby(g.place).transform('sum')
+    g['yr'] = g[y] - wmean
     f = g[flag].values.astype(bool)
     if f.sum() < 10:
         return None
-    yr, w = g.yr.values, g.valid_votes.values.astype(float)
-    obs = np.average(yr[f], weights=w[f]) - np.average(yr[~f], weights=w[~f])
-    grp = pd.factorize(g.mun)[0].astype(float)
-    o0 = np.argsort(grp, kind='stable')
-    f0 = f[o0]
-    null = np.empty(reps)
-    for i in range(reps):
-        o1 = np.argsort(grp + rng.random(len(grp)), kind='stable')
-        fp = np.empty_like(f)
-        fp[o1] = f0
-        null[i] = np.average(yr[fp], weights=w[fp]) - np.average(yr[~fp], weights=w[~fp])
-    p = (1 + (np.abs(null) >= abs(obs)).sum()) / (reps + 1)
+    yr, w = g.yr.values, w.values
+
+    def stat(ff):
+        return np.average(yr[ff], weights=w[ff]) - np.average(yr[~ff], weights=w[~ff])
+    obs = stat(f)
     raw = np.average(g[y].values[f], weights=w[f]) - np.average(g[y].values[~f], weights=w[~f])
     ra = (g.share_a - g.groupby('place').share_a.transform('mean')).values
-    return dict(flag=flag, n_flag=int(f.sum()), n=len(g), raw_diff=raw, within_place_diff=obs, null_sd=null.std(), p_perm=p, excess_votes_a=float((ra / 100 * w)[f].sum()),
-                share_a_flag=np.average(g.share_a.values[f], weights=w[f]), share_a_rest=np.average(g.share_a.values[~f], weights=w[~f]))
+    out = dict(flag=flag, n_flag=int(f.sum()), n=len(g), raw_diff=raw, within_place_diff=obs, excess_votes_a=float((ra / 100 * w)[f].sum()),
+               share_a_flag=np.average(g.share_a.values[f], weights=w[f]), share_a_rest=np.average(g.share_a.values[~f], weights=w[~f]))
+    for suffix, key in (('', g.mun), ('_local', g.place)):
+        grp = pd.factorize(key)[0].astype(float)
+        o0 = np.argsort(grp, kind='stable')
+        f0 = f[o0]
+        null = np.empty(reps)
+        for i in range(reps):
+            o1 = np.argsort(grp + rng.random(len(grp)), kind='stable')
+            fp = np.empty_like(f)
+            fp[o1] = f0
+            null[i] = stat(fp)
+        q = np.quantile(null, [.025, .975])
+        out.update({f'null_sd{suffix}': null.std(), f'null_mean{suffix}': null.mean(), f'null_q025{suffix}': q[0], f'null_q975{suffix}': q[1],
+                    f'p_perm{suffix}': (1 + (np.abs(null) >= abs(obs)).sum()) / (reps + 1)})
+    return out
 
 
 def bh(p):
@@ -249,6 +261,7 @@ def run():
         lists.append(L)
     R, T, S, SC, L = pd.DataFrame(results), pd.DataFrame(tests), pd.DataFrame(by_state), pd.DataFrame(score_tab), pd.concat(lists, ignore_index=True)
     T['q'] = bh(T.p_perm.values)
+    T['q_local'] = bh(T.p_perm_local.values)
     a = L[L.eid == 'P2022'][KEY + ['uf', 'score']].rename(columns={'score': 'score_2022'})
     prio = L[L.eid == 'P2026'].merge(a, on=KEY + ['uf'], how='left')
     prio['recorrente'] = prio.score_2022.notna()
@@ -265,11 +278,14 @@ def figures(T):
     x = np.arange(len(labs))
     for i, eid in enumerate(['P2022', 'P2026', 'M2024']):
         s = T[T.eid == eid].set_index('flag').reindex(labs)
-        ax.errorbar(x + (i - 1) * .25, s.within_place_diff, yerr=1.96 * s.null_sd, fmt='o', ms=4, label=LAB[eid], capsize=2)
+        xx = x + (i - 1) * .25
+        ax.vlines(xx, s.null_q025, s.null_q975, color='#c3c2b7', lw=5, zorder=1, label='faixa de 95% do acaso' if i == 0 else None)
+        ax.plot(xx, s.within_place_diff, 'o', ms=4.5, label=LAB[eid], zorder=3)
     ax.axhline(0, color='k', lw=.7)
     ax.set_xticks(x)
-    ax.set_xticklabels([l.replace('f_', '') for l in labs], fontsize=7)
-    ax.set(ylabel='dif. (A − B) sinalizadas − demais, dentro do mesmo local, p.p.', title='A sinalização favorece o lado A? (barras = ±1,96 desvios do acaso por permutação)')
+    ax.set_xticklabels([lb.replace('f_', '') for lb in labs], fontsize=7)
+    ax.set(ylabel='dif. (A − B) sinalizadas − demais, dentro do mesmo local, p.p.',
+           title='A sinalização se associa a um lado? (faixa cinza = 2,5%–97,5% do acaso, embaralhando no município; ponto = observado)')
     ax.legend(fontsize=7)
     f.tight_layout()
     f.savefig(FIG / 'perm_tests.png', dpi=150)
@@ -283,14 +299,15 @@ def img(p, w):
 
 def pdf(R, T, S, SC, L, prio, zones):
     P, H1, H2, SM, NOTE = M.P, M.H1, M.H2, M.SM, M.NOTE
-    st = [Paragraph('Inconsistências por seção, teste de favorecimento (lado A × lado B) e ferramenta de fiscalização', H1),
+    st = [Paragraph('Inconsistências por seção, teste de direção por permutação (lado A × lado B) e ferramenta de fiscalização', H1),
           Paragraph('Base: logs de urna re-identificados (inclui urnas de contingência e recarregadas), boletins, correspondências de urnas e perfil do eleitorado 2022. 10 estados; presidente 2022 (T1 e T2) e 2026 (T1); '
                     'prefeito 2024 (T1 e T2). Lado A = PT (presidente) ou candidato líder no município (prefeito); lado B = PL ou 2º colocado. Os indicadores medem comportamento operacional da seção '
                     '(horários, habilitações manuais pelo mesário, ritmo, comparecimento); nenhum observa compra de voto, coação ou intenção. “Inconsistência” aqui é desvio estatístico, e o teste '
                     'pergunta apenas se as seções desviantes votam diferente das vizinhas do mesmo local de votação.', P),
-          Paragraph('Método do teste: diferença (A − B) entre seções sinalizadas e não sinalizadas, medida dentro do mesmo local de votação (remove bairro/eleitorado), ponderada por votos válidos. '
-                    'p = fração de 1.000 embaralhamentos da sinalização dentro do município que produzem diferença igual ou maior (bilateral). q = correção para múltiplos testes (Benjamini–Hochberg). '
-                    '“Excesso de votos do lado A” = soma, nas seções sinalizadas, de (% do lado A na seção − % no local) × votos válidos: ordem de grandeza, não efeito.', NOTE),
+          Paragraph(f'Método do teste: diferença (A − B) entre seções sinalizadas e não sinalizadas, medida como desvio da média ponderada do próprio local de votação (remove bairro/eleitorado), ponderada por votos válidos. '
+                    f'p = fração de {REPS} embaralhamentos da sinalização que produzem diferença igual ou maior em módulo (bilateral), em dois esquemas: dentro do município e, como sensibilidade mais fiel à pergunta do mesmo prédio, '
+                    'dentro do próprio local de votação (colunas “local”). q = correção para múltiplos testes (Benjamini–Hochberg). “Excesso de votos do lado A” = soma, nas seções sinalizadas, de (% do lado A na seção − % no local) × votos válidos: ordem de grandeza, não efeito. '
+                    'Associação não é causa: a direção pode refletir o perfil de quem enfrenta fila.', NOTE),
           Paragraph('1. Indicadores e sinalizações (seções com ≥50 eleitores e log completo, salvo comparecimento e encerramento)', H2)]
     t = [['Eleição', 'Seções', 'Com log', 'Log completo', 'Contingência / recarregadas', 'Votos após 17h (todos os logs)', '… em contingência', 'Manuais', 'Manuais após 17h'] + [f.replace('f_', '') for f in FCOLS] + ['score 0', '1', '2', '3', '4+']]
     for r in R.itertuples():
@@ -300,11 +317,12 @@ def pdf(R, T, S, SC, L, prio, zones):
     t = [['Sinalização', 'Definição']]
     for f, desc in FLAGS:
         t.append([f.replace('f_', ''), desc])
-    st += [M.table(t, [3 * cm, 20 * cm], font=7), PageBreak(), Paragraph('2. A sinalização favorece um lado? (permutação dentro do município)', H2), img(FIG / 'perm_tests.png', 22)]
-    t = [['Eleição', 'Sinalização', 'Seções sinalizadas', 'Lado A % (sinalizadas)', 'Lado A % (demais)', 'Dif. bruta A−B p.p.', 'Dif. dentro do local p.p.', 'DP do acaso', 'p (permutação)', 'q (BH)', 'Excesso de votos do lado A nas sinalizadas']]
+    st += [M.table(t, [3 * cm, 20 * cm], font=7), PageBreak(), Paragraph('2. A sinalização se associa a um lado? (permutação dentro do município e dentro do local)', H2), img(FIG / 'perm_tests.png', 22)]
+    t = [['Eleição', 'Sinalização', 'Seções sinalizadas', 'Lado A % (sinalizadas)', 'Lado A % (demais)', 'Dif. bruta A−B p.p.', 'Dif. dentro do local p.p.', 'Faixa 95% do acaso (município)', 'p (município)', 'q (BH)', 'DP acaso (local)', 'p (local)', 'Excesso de votos do lado A nas sinalizadas']]
     for r in T.itertuples():
-        t.append([r.lab, r.flag.replace('f_', ''), n(r.n_flag), n(r.share_a_flag, 1), n(r.share_a_rest, 1), n(r.raw_diff, 2), n(r.within_place_diff, 2), n(r.null_sd, 2), n(r.p_perm, 3), n(r.q, 3), n(r.excess_votes_a)])
-    st += [M.table(t, font=5.6), PageBreak(), Paragraph('3. Quanto mais sinalizações, mais desvio?', H2),
+        t.append([r.lab, r.flag.replace('f_', ''), n(r.n_flag), n(r.share_a_flag, 1), n(r.share_a_rest, 1), n(r.raw_diff, 2), n(r.within_place_diff, 2), f'[{n(r.null_q025, 2)}; {n(r.null_q975, 2)}]', n(r.p_perm, 3), n(r.q, 3),
+                  n(r.null_sd_local, 2), n(r.p_perm_local, 3), n(r.excess_votes_a)])
+    st += [M.table(t, font=5.2), PageBreak(), Paragraph('3. Quanto mais sinalizações, mais desvio?', H2),
            Paragraph('Resíduo = % do lado A na seção − % no seu local de votação (ponderado por votos válidos); IC 95% por bootstrap.', P)]
     t = [['Eleição', 'Score', 'Seções', 'Lado A %', 'Resíduo vs local p.p.', 'IC 95%', 'Votos após 17h']]
     for r in SC.itertuples():

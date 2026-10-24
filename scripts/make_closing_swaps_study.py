@@ -24,7 +24,7 @@ import make_bahia_reports as M
 OUT = Path('relatorios/fechamento_e_trocas')
 FIG = OUT / 'figuras'
 FIG.mkdir(parents=True, exist_ok=True)
-ORDER = ['BA', 'SP', 'MG', 'RJ', 'PR', 'RS', 'PE', 'CE', 'PA', 'SC']
+ORDER = ['BA', 'SP', 'MG', 'RJ', 'PR', 'RS', 'PE', 'CE', 'PA', 'SC', 'MA']
 KEY = ['municipality', 'zone', 'section']
 # eid, label, type, office used for section-level result, year, turn, election day
 ELECS = [('P2018', 'Presidente 2018 T1', 'geral', 'PRESIDENTE', 2018, 1), ('P2018b', 'Presidente 2018 T2', 'geral', 'PRESIDENTE', 2018, 2),

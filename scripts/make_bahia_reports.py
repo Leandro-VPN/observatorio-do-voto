@@ -16,7 +16,7 @@ from reportlab.platypus import Image, PageBreak, Paragraph, SimpleDocTemplate, S
 import os
 UF = os.environ.get('UF', 'BA').upper()
 NAMES = {'BA': 'Bahia', 'SP': 'São Paulo', 'MG': 'Minas Gerais', 'RJ': 'Rio de Janeiro', 'PR': 'Paraná', 'RS': 'Rio Grande do Sul',
-         'PE': 'Pernambuco', 'CE': 'Ceará', 'PA': 'Pará', 'SC': 'Santa Catarina'}
+         'PE': 'Pernambuco', 'CE': 'Ceará', 'PA': 'Pará', 'SC': 'Santa Catarina', 'MA': 'Maranhão'}
 UFNAME = NAMES[UF]
 OFFICE = os.environ.get('OFFICE', 'PRESIDENTE').upper()
 OFFICE_LABEL = {'PRESIDENTE': 'Presidente', 'GOVERNADOR': 'Governador'}[OFFICE]
