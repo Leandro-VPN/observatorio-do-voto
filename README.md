@@ -6,6 +6,10 @@ O pedido mais recente está em `research/`: quatro eleições presidenciais (201
 
 O painel inclui **Piloto BA/2022/T2**, também acessível em http://127.0.0.1:8501/?study=pilot. A consolidação produz `research/piloto-ba-2022-t2/analysis/RELATORIO.md`, tabelas territoriais e manifesto. Resultados exploratórios de horários registrados e sequências manuais não equivalem aos indicadores confirmatórios ajustados.
 
+### Varredura por local de votação (fiscalização)
+
+`scripts/make_varredura_locais.py` consolida, por local de votação, as seções com votação tardia e/ou habilitação manual excessiva, compara cada uma às demais seções do mesmo local sem o comportamento com um teste de diferença real (≥5 p.p. e |z| ≥ 2, com taxa-base medida nas seções comuns), cruza o padrão prefeito × presidente por seção e atribui uma pontuação transparente de risco (0–100). Saída em `relatorios/fiscalizacao/varredura/`: `VARREDURA_LOCAIS.xlsx` (aba `leia_me` com a metodologia), `LOCAIS_<UF>.xlsx`, `prioridade_locais_2026_T2.csv` e `VARREDURA_LOCAIS_RISCO.pdf`. Depende dos `secoes_indicadores_*.parquet` gerados por `make_fiscalizacao_study.py` e roda no `.venv-report`. Sinalização não é acusação.
+
 ## Base regional anterior
 
 Aplicação local para pesquisar **presidente e prefeito nos 16 estados do Norte e Nordeste**, em oito pleitos, usando dados oficiais do TSE com fontes, hashes, snapshots e cobertura explícita.
