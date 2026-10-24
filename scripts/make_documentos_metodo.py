@@ -151,8 +151,8 @@ def two_panel(D, col, ylabel, title, fmt, hline=None, ncol='n'):
         bar_labels(ax, b1, fmt); bar_labels(ax, b2, fmt)
         if hline is not None:
             ax.axhline(hline, color=INK2, lw=.8, ls='--')
-        labs = [f'{LAB[e]}\nn = {n(getattr(rb, ncol))} / {n(getattr(rc, ncol))}' if rb is not None and rc is not None else LAB[e] for e, rb, rc in zip(V.eid, b, c)]
-        ax.set_xticks(xs); ax.set_xticklabels(labs, fontsize=8); ax.set_title(ttl, fontsize=10.5, loc='center')
+        labs = [f'{LAB[e]}\nn = {n(getattr(rb, ncol))}\ncomuns {n(getattr(rc, ncol))}' if rb is not None and rc is not None else LAB[e] for e, rb, rc in zip(V.eid, b, c)]
+        ax.set_xticks(xs); ax.set_xticklabels(labs, fontsize=7.5); ax.set_title(ttl, fontsize=10.5, loc='center')
         ax.set_ylim(0, np.nanmax(vb + vc) * 1.22)
     axes[0].set_ylabel(ylabel); axes[0].legend(loc='upper left', fontsize=8.5)
     f.suptitle(title, x=.01, ha='left', fontsize=12, fontweight='bold')
