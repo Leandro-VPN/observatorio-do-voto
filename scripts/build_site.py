@@ -253,14 +253,29 @@ def main():
     pac.mkdir(exist_ok=True)
 
     def zipf(name, files):
+        """Monta o pacote só quando todas as fontes existem (numa restauração a partir da release os pacotes já estão publicados; o site aponta para eles)."""
+        files = [Path(f) for f in files]
+        missing = [str(f) for f in files if not f.exists()]
+        if missing:
+            print(f'pacote {name} não montado (fontes ausentes: {len(missing)}); o site usa o da release', flush=True)
+            return
         with zipfile.ZipFile(pac / name, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as z:
             for f in files:
-                z.write(f, Path(f).name)
+                z.write(f, f.name)
     zipf('varredura-locais.zip', [VAR / f for f in ['locais_risco.csv', 'prioridade_locais_2026_T2.csv', 'zonas.csv', 'cidades.csv', 'secoes_historico.csv', 'secoes_com_comportamento_por_eleicao.csv', 'padroes_pres_x_pref_por_uf.csv',
                                                     'resumo_por_eleicao.csv', 'comparacao_por_nivel.csv', 'pres_x_pref_pareado.csv', 'pres_x_pref_mesmas_secoes.csv', 'recorrencia_condicional.csv']])
     zipf('mapa-fiscalizacao-2026-t2.zip', [MAPA / f for f in ['locais_todos.csv', 'secoes_checklist_todas.csv', 'zonas_todas.csv', 'resumo_por_uf.csv', 'MAPA_FISCALIZACAO_2026T2_GERAL.pdf', 'MAPA_FISCALIZACAO_2026T2_GERAL.xlsx']]
          + sorted(MAPA.glob('MAPA_FISCALIZACAO_2026T2_??.pdf')) + sorted(MAPA.glob('MAPA_FISCALIZACAO_2026T2_??.xlsx')))
     zipf('planilhas-varredura-por-uf.zip', [VAR / 'VARREDURA_LOCAIS.xlsx'] + sorted(VAR.glob('LOCAIS_??.xlsx')))
+    man_rel = json.loads((dd / 'manifesto-release.json').read_text(encoding='utf-8')) if (dd / 'manifesto-release.json').exists() else {'ativos': {}}
+
+    def size_of(name):
+        """Tamanho exibido: arquivo local (pacote ou parquet) ou, na falta, o registrado no manifesto da release."""
+        for p in (pac / name, FISC / name):
+            if p.exists():
+                return sz(p)
+        b = man_rel['ativos'].get(name, {}).get('bytes')
+        return (f'{b / MB:,.1f} MB'.replace(',', 'X').replace('.', ',').replace('X', '.') if b else '')
     # dicionário de campos por arquivo/coluna (esquema lido dos próprios dados) + glossário metodológico dos leia_me
     dicionario(dd)
     sys.path.insert(0, 'scripts')
@@ -287,22 +302,22 @@ def main():
                  ('ZIP', 'mapa-fiscalizacao-2026-t2.zip', 'Mapa de fiscalização 2026 T2', 'Locais, checklist por seção, zonas; PDF e Excel geral e por estado', 'release'),
                  ('ZIP', 'planilhas-varredura-por-uf.zip', 'Planilhas da varredura', 'VARREDURA_LOCAIS.xlsx e LOCAIS_<UF>.xlsx', 'release')]
     for eid in ORDER_EIDS:
-        if (FISC / f'secoes_indicadores_{eid}.parquet').exists():
-            downloads.append(('PARQUET', f'secoes_indicadores_{eid}.parquet', f'Indicadores por seção · {LAB[eid]}', 'Uma linha por seção: BU, log, perfil, indicadores, lado A/B', 'release'))
+        name = f'secoes_indicadores_{eid}.parquet'
+        if (FISC / name).exists() or name in man_rel['ativos']:
+            downloads.append(('PARQUET', name, f'Indicadores por seção · {LAB[eid]}', 'Uma linha por seção: BU, log, perfil, indicadores, lado A/B', 'release'))
     dl = []
     for tipo, f, titulo, desc, origem in downloads:
         if origem == 'site':
             dl.append(f'<div><span class="file-type">{tipo}</span><div><h3>{esc(titulo)}</h3><p class="desc">{esc(desc)}</p></div><span class="size">{sz(dd / f)}</span><a href="dados/{f}" download aria-label="Baixar {esc(titulo)}">↧</a></div>')
         else:
-            local = (pac / f) if (pac / f).exists() else (FISC / f)
-            size = sz(local) if local.exists() else ''
+            size = size_of(f)
             if rel_base:
                 dl.append(f'<div><span class="file-type">{tipo}</span><div><h3>{esc(titulo)}</h3><p class="desc">{esc(desc)} · GitHub Release {esc(tag)}</p></div><span class="size">{size}</span><a href="{rel_base}{f}" aria-label="Baixar {esc(titulo)} (GitHub Release)">↧</a></div>')
             else:
                 dl.append(f'<div><span class="file-type">{tipo}</span><div><h3>{esc(titulo)}</h3><p class="desc">{esc(desc)}</p></div><span class="size">{size}</span><span class="soon">EM PUBLICAÇÃO</span></div>')
     if rel_base:
-        if (pac / 'edicao-editorial.zip').exists():
-            dl.append(f'<div><span class="file-type">ZIP</span><div><h3>Pacote editorial da edição</h3><p class="desc">Tudo o que o gerador do site lê (CSVs, PDFs, figuras); restaure com scripts/restore_edicao.py · GitHub Release {esc(tag)}</p></div><span class="size">{sz(pac / "edicao-editorial.zip")}</span><a href="{rel_base}edicao-editorial.zip" aria-label="Baixar pacote editorial">↧</a></div>')
+        if (pac / 'edicao-editorial.zip').exists() or 'edicao-editorial.zip' in man_rel['ativos']:
+            dl.append(f'<div><span class="file-type">ZIP</span><div><h3>Pacote editorial da edição</h3><p class="desc">Tudo o que o gerador do site lê (CSVs, PDFs, figuras); restaure com scripts/restore_edicao.py · GitHub Release {esc(tag)}</p></div><span class="size">{size_of("edicao-editorial.zip")}</span><a href="{rel_base}edicao-editorial.zip" aria-label="Baixar pacote editorial">↧</a></div>')
         if (dd / 'manifesto-release.json').exists():
             dl.append('<div><span class="file-type">JSON</span><div><h3>Manifesto da release</h3><p class="desc">SHA-256 de cada pacote, parâmetros, entradas e código produtor da edição</p></div>'
                       f'<span class="size">{sz(dd / "manifesto-release.json")}</span><a href="dados/manifesto-release.json" download aria-label="Baixar manifesto">↧</a></div>')

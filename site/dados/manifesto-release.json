@@ -49,47 +49,47 @@
   "secoes_indicadores_P2022.parquet": {
    "bytes": 29166259,
    "sha256": "3757060247baa8a3b6e86bd886d68c1a3775fbc9247f61410e15707abd2d002a",
-   "url": "https://github.com/Leandro-VPN/observatorio-do-voto/releases/download/untagged-a3b736bf33b260596ea4/secoes_indicadores_P2022.parquet"
+   "url": "https://github.com/Leandro-VPN/observatorio-do-voto/releases/download/dados-2026-10-24-r2/secoes_indicadores_P2022.parquet"
   },
   "secoes_indicadores_P2022b.parquet": {
    "bytes": 26457689,
    "sha256": "5a541d2a7788f22227f5a95e6449f5d639cc214d1b601ac7c5fe421df0a26b63",
-   "url": "https://github.com/Leandro-VPN/observatorio-do-voto/releases/download/untagged-a3b736bf33b260596ea4/secoes_indicadores_P2022b.parquet"
+   "url": "https://github.com/Leandro-VPN/observatorio-do-voto/releases/download/dados-2026-10-24-r2/secoes_indicadores_P2022b.parquet"
   },
   "secoes_indicadores_M2024.parquet": {
    "bytes": 27995342,
    "sha256": "89fdee1ff1e19b6d598d571eb1c5334fab3f648fbbf20ccfdc25970f2034306f",
-   "url": "https://github.com/Leandro-VPN/observatorio-do-voto/releases/download/untagged-a3b736bf33b260596ea4/secoes_indicadores_M2024.parquet"
+   "url": "https://github.com/Leandro-VPN/observatorio-do-voto/releases/download/dados-2026-10-24-r2/secoes_indicadores_M2024.parquet"
   },
   "secoes_indicadores_M2024b.parquet": {
    "bytes": 5841416,
    "sha256": "947cb351ca63e302c2749bc903c9784e2a5cb971dea2dc4bf63eb85d96c899c7",
-   "url": "https://github.com/Leandro-VPN/observatorio-do-voto/releases/download/untagged-a3b736bf33b260596ea4/secoes_indicadores_M2024b.parquet"
+   "url": "https://github.com/Leandro-VPN/observatorio-do-voto/releases/download/dados-2026-10-24-r2/secoes_indicadores_M2024b.parquet"
   },
   "secoes_indicadores_P2026.parquet": {
    "bytes": 29635081,
    "sha256": "3370582b63ed49180bf4999e9d63cc6385e8861d8227890fe71dd8602bac27e3",
-   "url": "https://github.com/Leandro-VPN/observatorio-do-voto/releases/download/untagged-a3b736bf33b260596ea4/secoes_indicadores_P2026.parquet"
+   "url": "https://github.com/Leandro-VPN/observatorio-do-voto/releases/download/dados-2026-10-24-r2/secoes_indicadores_P2026.parquet"
   },
   "varredura-locais.zip": {
    "bytes": 16843334,
    "sha256": "099260e68ba197fabbd05e8790850d7b994c0843c8d1fccbb9bcf6396703c93e",
-   "url": "https://github.com/Leandro-VPN/observatorio-do-voto/releases/download/untagged-a3b736bf33b260596ea4/varredura-locais.zip"
+   "url": "https://github.com/Leandro-VPN/observatorio-do-voto/releases/download/dados-2026-10-24-r2/varredura-locais.zip"
   },
   "planilhas-varredura-por-uf.zip": {
    "bytes": 87107087,
    "sha256": "955864634bc27cf76d44024692980ad759bcab817cdb62acab34c44c0b1e09ce",
-   "url": "https://github.com/Leandro-VPN/observatorio-do-voto/releases/download/untagged-a3b736bf33b260596ea4/planilhas-varredura-por-uf.zip"
+   "url": "https://github.com/Leandro-VPN/observatorio-do-voto/releases/download/dados-2026-10-24-r2/planilhas-varredura-por-uf.zip"
   },
   "mapa-fiscalizacao-2026-t2.zip": {
    "bytes": 6441868,
    "sha256": "96e6503b669d3eb949aeea782195d3b3333336fdba5924d2202e15cf5531c03c",
-   "url": "https://github.com/Leandro-VPN/observatorio-do-voto/releases/download/untagged-a3b736bf33b260596ea4/mapa-fiscalizacao-2026-t2.zip"
+   "url": "https://github.com/Leandro-VPN/observatorio-do-voto/releases/download/dados-2026-10-24-r2/mapa-fiscalizacao-2026-t2.zip"
   },
   "edicao-editorial.zip": {
    "bytes": 19461591,
    "sha256": "1d0788e719fc8937c01a3be168ae29f5211fc5ce0d499ad9014c04a0232cacab",
-   "url": "https://github.com/Leandro-VPN/observatorio-do-voto/releases/download/untagged-a3b736bf33b260596ea4/edicao-editorial.zip"
+   "url": "https://github.com/Leandro-VPN/observatorio-do-voto/releases/download/dados-2026-10-24-r2/edicao-editorial.zip"
   }
  },
  "substituiu_ativos": false,

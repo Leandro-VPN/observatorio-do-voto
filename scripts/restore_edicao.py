@@ -10,6 +10,7 @@ import hashlib
 import json
 import ssl
 import sys
+import urllib.parse
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -47,7 +48,7 @@ def main():
     for name in wanted:
         info = man['ativos'][name]
         print('baixando', name, f"{info['bytes'] / 1024 ** 2:.1f} MB", flush=True)
-        b = get(info['url'])
+        b = get(base + urllib.parse.quote(name))   # URL pela tag, independente da gravada no manifesto
         if sha256(b) != info['sha256']:
             raise SystemExit(f'SHA-256 divergente em {name}; nada foi extraído deste arquivo')
         if name.endswith('.zip'):

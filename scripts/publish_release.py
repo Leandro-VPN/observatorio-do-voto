@@ -128,7 +128,8 @@ def main():
         remote = (res.get('digest') or '').replace('sha256:', '')
         if remote and remote != local:
             raise SystemExit(f'digest divergente em {p.name}: local {local} × GitHub {remote}')
-        manifest['ativos'][p.name] = {'bytes': res['size'], 'sha256': local, 'url': res['browser_download_url']}
+        # URL estável pela tag (a URL devolvida durante o rascunho aponta para "untagged-…" e deixa de existir ao publicar)
+        manifest['ativos'][p.name] = {'bytes': res['size'], 'sha256': local, 'url': f'https://github.com/{repo}/releases/download/{tag}/{urllib.parse.quote(p.name)}'}
         print('enviado', p.name, f"{res['size'] / 1024 ** 2:.1f} MB", 'sha256 ok' if remote else 'sha256 local', flush=True)
     mpath = pac / 'manifesto-release.json'
     mpath.write_text(json.dumps(manifest, ensure_ascii=False, indent=1), encoding='utf-8')
