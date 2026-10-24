@@ -607,11 +607,13 @@ def pdf_resumo(D, figs):
 
 
 def main():
+    import json
     D = load()
     figs = charts(D)
     pdf_graficos(figs, D)
     pdf_metodo(D, figs)
     pdf_resumo(D, figs)
+    (FIG / 'legendas.json').write_text(json.dumps([{'arquivo': p.name, 'legenda': cap} for p, cap in figs], ensure_ascii=False, indent=1), encoding='utf-8')
     print('ok', len(figs), 'graficos;', D['head'], '; UFs:', ','.join(D['ufs']))
 
 
