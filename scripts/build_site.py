@@ -91,8 +91,11 @@ def main():
     for f in ['resumo_indicadores.csv', 'testes_permutacao.csv']:
         shutil.copy2(FISC / f, dd / f.replace('_', '-'))
 
+    pac = SITE / 'pacotes'   # pacotes grandes: gerados aqui, publicados como GitHub Release (publish_release.py), fora do git e do site
+    pac.mkdir(exist_ok=True)
+
     def zipf(name, files):
-        with zipfile.ZipFile(dd / name, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as z:
+        with zipfile.ZipFile(pac / name, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as z:
             for f in files:
                 z.write(f, Path(f).name)
     zipf('varredura-locais.zip', [VAR / f for f in ['locais_risco.csv', 'prioridade_locais_2026_T2.csv', 'zonas.csv', 'cidades.csv', 'secoes_historico.csv', 'secoes_com_comportamento_por_eleicao.csv', 'padroes_pres_x_pref_por_uf.csv',
@@ -108,24 +111,34 @@ def main():
     import make_varredura_locais as MV
     dic = pd.concat([MV.readme().assign(origem='varredura'), MM.readme().assign(origem='mapa_2026_T2')])
     dic.to_csv(dd / 'dicionario-de-campos.csv', index=False, **CSV, encoding='utf-8-sig')
-    downloads = [('CSV', 'resumo-por-eleicao.csv', 'Resumo por eleição e turno', 'Indicadores agregados, por nível de comparação'),
-                 ('CSV', 'comparacao-por-nivel.csv', 'Comparação por nível', 'Com comportamento × comuns, por eleição e nível (local / poucos pares / município)'),
-                 ('CSV', 'pres-x-pref-pareado.csv', 'Prefeito × presidente, mesmas seções', 'Taxas com denominadores; e pres-x-pref-mesmas-secoes.csv (McNemar)'),
-                 ('CSV', 'testes-permutacao.csv', 'Testes de direção por permutação', 'Dois esquemas de embaralhamento, quantis do nulo, p e q'),
-                 ('ZIP', 'varredura-locais.zip', 'Varredura por local de votação', 'Locais com pontuação e motivos, prioridade 2026 T2, histórico por seção, seções por eleição'),
-                 ('ZIP', 'mapa-fiscalizacao-2026-t2.zip', 'Mapa de fiscalização 2026 T2', 'Locais, checklist por seção, zonas; PDF e Excel geral e por estado'),
-                 ('ZIP', 'planilhas-varredura-por-uf.zip', 'Planilhas da varredura', 'VARREDURA_LOCAIS.xlsx e LOCAIS_<UF>.xlsx'),
-                 ('CSV', 'dicionario-de-campos.csv', 'Dicionário de campos', 'Definição de cada coluna e critério')]
-    if cfg.get('incluir_parquet'):
-        for eid in ORDER_EIDS:
-            f = FISC / f'secoes_indicadores_{eid}.parquet'
-            if f.exists():
-                shutil.copy2(f, dd / f'secoes-indicadores-{eid}.parquet')
-                downloads.append(('PARQUET', f'secoes-indicadores-{eid}.parquet', f'Indicadores por seção · {LAB[eid]}', 'Uma linha por seção: BU, log, perfil, indicadores, lado A/B'))
-    dl = []
-    for tipo, f, titulo, desc in downloads:
-        dl.append(f'<div><span class="file-type">{tipo}</span><div><h3>{esc(titulo)}</h3><p class="desc">{esc(desc)}</p></div><span class="size">{sz(dd / f)}</span><a href="dados/{f}" download aria-label="Baixar {esc(titulo)}">↧</a></div>')
     repo = cfg.get('repo_url') or ''
+    tag = cfg.get('release_tag') or ''
+    rel_base = f'{repo}/releases/download/{tag}/' if repo and tag else ''
+    # (tipo, arquivo, título, descrição, origem): 'site' = pequeno, fica em site/dados; 'release' = grande, link para a GitHub Release
+    downloads = [('CSV', 'resumo-por-eleicao.csv', 'Resumo por eleição e turno', 'Indicadores agregados, por nível de comparação', 'site'),
+                 ('CSV', 'comparacao-por-nivel.csv', 'Comparação por nível', 'Com comportamento × comuns, por eleição e nível (local / poucos pares / município)', 'site'),
+                 ('CSV', 'pres-x-pref-pareado.csv', 'Prefeito × presidente, mesmas seções', 'Taxas com denominadores; e pres-x-pref-mesmas-secoes.csv (McNemar)', 'site'),
+                 ('CSV', 'testes-permutacao.csv', 'Testes de direção por permutação', 'Dois esquemas de embaralhamento, quantis do nulo, p e q', 'site'),
+                 ('CSV', 'dicionario-de-campos.csv', 'Dicionário de campos', 'Definição de cada coluna e critério', 'site'),
+                 ('ZIP', 'varredura-locais.zip', 'Varredura por local de votação', 'Locais com pontuação e motivos, prioridade 2026 T2, histórico por seção, seções por eleição', 'release'),
+                 ('ZIP', 'mapa-fiscalizacao-2026-t2.zip', 'Mapa de fiscalização 2026 T2', 'Locais, checklist por seção, zonas; PDF e Excel geral e por estado', 'release'),
+                 ('ZIP', 'planilhas-varredura-por-uf.zip', 'Planilhas da varredura', 'VARREDURA_LOCAIS.xlsx e LOCAIS_<UF>.xlsx', 'release')]
+    for eid in ORDER_EIDS:
+        if (FISC / f'secoes_indicadores_{eid}.parquet').exists():
+            downloads.append(('PARQUET', f'secoes_indicadores_{eid}.parquet', f'Indicadores por seção · {LAB[eid]}', 'Uma linha por seção: BU, log, perfil, indicadores, lado A/B', 'release'))
+    dl = []
+    for tipo, f, titulo, desc, origem in downloads:
+        if origem == 'site':
+            dl.append(f'<div><span class="file-type">{tipo}</span><div><h3>{esc(titulo)}</h3><p class="desc">{esc(desc)}</p></div><span class="size">{sz(dd / f)}</span><a href="dados/{f}" download aria-label="Baixar {esc(titulo)}">↧</a></div>')
+        else:
+            local = (pac / f) if (pac / f).exists() else (FISC / f)
+            size = sz(local) if local.exists() else ''
+            if rel_base:
+                dl.append(f'<div><span class="file-type">{tipo}</span><div><h3>{esc(titulo)}</h3><p class="desc">{esc(desc)} · GitHub Release {esc(tag)}</p></div><span class="size">{size}</span><a href="{rel_base}{f}" aria-label="Baixar {esc(titulo)} (GitHub Release)">↧</a></div>')
+            else:
+                dl.append(f'<div><span class="file-type">{tipo}</span><div><h3>{esc(titulo)}</h3><p class="desc">{esc(desc)}</p></div><span class="size">{size}</span><span class="soon">EM PUBLICAÇÃO</span></div>')
+    if rel_base:
+        dl.append(f'<div><span class="file-type">REL</span><div><h3>Todos os pacotes da edição</h3><p class="desc">Página da release no GitHub, com somas de verificação e notas</p></div><a href="{cfg.get("release_url") or repo + "/releases"}" target="_blank" rel="noopener" aria-label="Abrir a release no GitHub">↗</a></div>')
     repo_bloco = (f'<p class="repo-note">Código e reprodução: <a href="{repo}" target="_blank" rel="noopener">{repo}</a>. Os dados brutos (boletins, logs de urna, correspondências e perfil) são públicos no TSE e são baixados pelos scripts do repositório.</p>'
                   if repo else '<p class="repo-note">Código e reprodução: repositório em publicação; o link será incluído aqui.</p>')
     repo_link = f'<a href="{repo}" target="_blank" rel="noopener">Código ↗</a>' if repo else ''

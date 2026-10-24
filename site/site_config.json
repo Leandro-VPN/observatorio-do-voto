@@ -1,4 +1,4 @@
-﻿{
+{
   "titulo": "Observatório do Voto",
   "repo_url": "https://github.com/Leandro-VPN/observatorio-do-voto",
   "pages_url": "https://leandro-vpn.github.io/observatorio-do-voto/",
@@ -8,5 +8,16 @@
   "pix_chave": "4cc4708e-e291-4012-ab41-3c67eab901c9",
   "pix_titular": "Leandro de Almeida Miguel",
   "meta_apoio": "R$ 5.000",
-  "incluir_parquet": true
+  "release_tag": "dados-2026-10-24",
+  "release_url": "https://github.com/Leandro-VPN/observatorio-do-voto/releases/tag/dados-2026-10-24",
+  "release_assets": [
+    "relatorios/fiscalizacao/secoes_indicadores_P2022.parquet",
+    "relatorios/fiscalizacao/secoes_indicadores_P2022b.parquet",
+    "relatorios/fiscalizacao/secoes_indicadores_M2024.parquet",
+    "relatorios/fiscalizacao/secoes_indicadores_M2024b.parquet",
+    "relatorios/fiscalizacao/secoes_indicadores_P2026.parquet",
+    "site/pacotes/varredura-locais.zip",
+    "site/pacotes/planilhas-varredura-por-uf.zip",
+    "site/pacotes/mapa-fiscalizacao-2026-t2.zip"
+  ]
 }

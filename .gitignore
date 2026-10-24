@@ -18,6 +18,9 @@ storage-regional/
 demo-storage/
 *.log
 
+# pacotes grandes do site: publicados como GitHub Release (scripts/publish_release.py), nao versionados
+site/pacotes/
+
 # Dados de pesquisa e saidas geradas (grandes; reproduziveis pelos scripts/)
 research/*
 !research/PLANO_ANALISE_A_PRIORI.md
