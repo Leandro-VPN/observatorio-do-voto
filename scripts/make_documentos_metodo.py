@@ -188,12 +188,12 @@ def charts(D):
     a1.barh(pcn.index, pcn.values, color=C1)
     for i, v in enumerate(pcn.values):
         a1.text(v, i, ' ' + n(v), va='center', fontsize=8.5, color=INK2)
-    a1.set_xscale('log'); a1.set_xlim(right=pcn.max() * 6); a1.set_title('Onde aparece o comportamento (fila/manual)'); a1.set_xlabel('seções (escala log)')
+    a1.set_xscale('log'); a1.set_xlim(right=pcn.max() * 6); a1.set_title('Onde aparece o comportamento (fila/manual)', loc='center'); a1.set_xlabel('seções (escala log)')
     pdv = H.padrao_desvio_resultado.value_counts().sort_values()
     a2.barh(pdv.index, pdv.values, color=C2)
     for i, v in enumerate(pdv.values):
         a2.text(v, i, ' ' + n(v), va='center', fontsize=8.5, color=INK2)
-    a2.set_xscale('log'); a2.set_xlim(right=pdv.max() * 6); a2.set_title('Onde a seção vota diferente das vizinhas'); a2.set_xlabel('seções (escala log)')
+    a2.set_xscale('log'); a2.set_xlim(right=pdv.max() * 6); a2.set_title('Onde vota diferente das vizinhas', loc='center'); a2.set_xlabel('seções (escala log)')
     figs.append((save(f, '08_pres_x_pref'), 'À esquerda, o comportamento (fila/manual) aparece quase sempre só nas presidenciais, o que é esperado: as filas de 1º turno presidencial são maiores. À direita, o que importa: '
                  f'{n(int((H.padrao_desvio_resultado == "desvio real só em presidenciais").sum()))} seções votam diferente das vizinhas só nas presidenciais, contra {n(int((H.padrao_desvio_resultado == "desvio real só em municipais").sum()))} só nas municipais.'))
     # 9 recorrência
