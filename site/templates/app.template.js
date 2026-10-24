@@ -38,5 +38,34 @@ if (homeBtn) homeBtn.addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(key); document.querySelector('#copy-status-home').textContent = 'Chave Pix copiada. Confira o destinatário no aplicativo do seu banco.'; }
   catch { document.querySelector('#copy-status-home').textContent = 'Chave Pix: ' + key; }
 });
-document.querySelectorAll('.gallery figure').forEach(f => f.addEventListener('click', () => { const d = document.querySelector('#zoom'); d.querySelector('img').src = f.querySelector('img').src; d.querySelector('figcaption').textContent = f.querySelector('figcaption').textContent; d.showModal(); }));
+// galeria: ampliação por botão (teclado e leitor de tela), com título e legenda no diálogo
+document.querySelectorAll('.gallery .zoom-btn').forEach(b => b.addEventListener('click', () => {
+  const fig = b.closest('figure'), d = document.querySelector('#zoom'), img = fig.querySelector('img');
+  d.querySelector('img').src = img.src; d.querySelector('img').alt = img.alt;
+  d.querySelector('#zoom-titulo').textContent = fig.querySelector('figcaption b').textContent;
+  d.querySelector('#zoom-legenda').textContent = ' ' + fig.querySelector('figcaption').textContent.replace(fig.querySelector('figcaption b').textContent, '').replace(/Ver no caderno.*$/, '').trim();
+  d.showModal(); d.querySelector('.close').focus();
+}));
 document.querySelector('#zoom .close').addEventListener('click', () => document.querySelector('#zoom').close());
+// busca de locais por UF (índice JSON estático por estado)
+const bUf = document.querySelector('#busca-uf'), bTxt = document.querySelector('#busca-texto'), bPri = document.querySelector('#busca-prioridade'), bSt = document.querySelector('#busca-status'), bTb = document.querySelector('#busca-tabela tbody');
+const idx = {};
+const norm = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+async function loadUf(uf) {
+  if (!idx[uf]) { bSt.textContent = 'Carregando ' + uf + '…'; const r = await fetch('dados/locais/' + uf + '.json'); idx[uf] = (await r.json()).locais; }
+  return idx[uf];
+}
+async function buscar() {
+  const uf = bUf.value; bTb.innerHTML = '';
+  if (!uf) { bSt.textContent = 'Selecione um estado para começar.'; return; }
+  const all = await loadUf(uf), q = norm(bTxt.value.trim()), pri = bPri.value;
+  const hits = all.filter(r => (!pri || r[4] === pri) && (!q || norm(r[0]).includes(q) || norm(r[3]).includes(q) || String(r[1]) === q || String(r[2]) === q));
+  const show = hits.slice(0, 150);
+  bSt.textContent = `${fmt.format(hits.length)} locais encontrados em ${uf}` + (hits.length > show.length ? ` (mostrando os ${show.length} de maior pontuação; refine a busca)` : '') + '. Prioridade é ordem de observação, não probabilidade de irregularidade.';
+  for (const r of show) {
+    const tr = document.createElement('tr');
+    [r[0], r[1], r[2], r[3] || 'local sem nome cadastrado', r[4], r[5], r[6], r[7], r[8], r[9], r[10], r[11]].forEach((v, i) => { const td = document.createElement('td'); td.textContent = v; if (i === 4) td.className = 'pri-' + String(v).replace('é', 'e'); tr.appendChild(td); });
+    bTb.appendChild(tr);
+  }
+}
+if (bUf) { bUf.addEventListener('change', buscar); bPri.addEventListener('change', buscar); let t; bTxt.addEventListener('input', () => { clearTimeout(t); t = setTimeout(buscar, 200); }); }

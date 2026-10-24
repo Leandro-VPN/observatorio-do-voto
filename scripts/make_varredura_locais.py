@@ -278,8 +278,9 @@ def section_history(E):
     hist['n_dif_real_favor_B'] = hist.n_pres_favor_B
     hist['votos_tardios_total'] = sum(hist[f'tardios_{e}'].fillna(0) for e in pres + pref)
     hist['manuais_apos_17h_total'] = sum(hist[f'manuais17_{e}'].fillna(0) for e in pres + pref)
-    pres_present = sum(hist[f'present_{e}'].fillna(False).astype(int) for e in pres) > 0
-    pref_present = sum(hist[f'present_{e}'].fillna(False).astype(int) for e in pref) > 0
+    zero = pd.Series(0, index=hist.index)
+    pres_present = (zero + sum(hist[f'present_{e}'].fillna(False).astype(int) for e in pres)) > 0
+    pref_present = (zero + sum(hist[f'present_{e}'].fillna(False).astype(int) for e in pref)) > 0
     pb, mb = hist.n_pres_comportamento > 0, hist.n_pref_comportamento > 0
     hist['padrao_comportamento'] = np.select(
         [pb & mb, pb & ~mb & pref_present, pb & ~mb & ~pref_present, ~pb & mb & pres_present, ~pb & mb & ~pres_present],
@@ -561,6 +562,41 @@ def xlsx(path, sheets):
                 ws.set_column(1, 1, 140)
 
 
+def git_info():
+    """SHA do código produtor: git no PATH, com o caminho padrão do Windows como alternativa; 'n/d' se não houver git."""
+    import shutil
+    import subprocess
+    exe = shutil.which('git') or ('C:/Program Files/Git/cmd/git.exe' if Path('C:/Program Files/Git/cmd/git.exe').exists() else None)
+    if not exe:
+        return {'codigo_sha': 'n/d', 'codigo_sujo': None}
+    try:
+        sha = subprocess.run([exe, 'rev-parse', 'HEAD'], capture_output=True, text=True, timeout=20, check=True).stdout.strip()
+        dirty = bool(subprocess.run([exe, 'status', '--porcelain', '--', 'scripts', 'src'], capture_output=True, text=True, timeout=20, check=True).stdout.strip())
+        return {'codigo_sha': sha, 'codigo_sujo': dirty}
+    except Exception:
+        return {'codigo_sha': 'n/d', 'codigo_sujo': None}
+
+
+def sha256_file(p):
+    import hashlib
+    h = hashlib.sha256()
+    with open(p, 'rb') as f:
+        for b in iter(lambda: f.read(8 * 1024 ** 2), b''):
+            h.update(b)
+    return h.hexdigest()
+
+
+def write_manifest(E):
+    """Manifesto da edição: data da geração, código produtor, parâmetros e hashes das entradas. É a fonte da data/tag da edição (não o mtime)."""
+    import json
+    ufs = sorted({u for d in E.values() for u in d.uf.unique()}, key=lambda u: ORDER.index(u) if u in ORDER else 99)
+    man = {'edicao': pd.Timestamp.now().strftime('%Y-%m-%d'), 'gerado_em': pd.Timestamp.now().isoformat(timespec='seconds'), **git_info(), 'script': 'scripts/make_varredura_locais.py',
+           'parametros': {'MIN_PP': MIN_PP, 'BIG': BIG, 'ZMIN': ZMIN, 'MIN_PEERS': MIN_PEERS, 'elegibilidade_aptos_min': 50, 'cortes_prioridade': {'alta': 45, 'media': 25}},
+           'ufs': ufs, 'eleicoes': list(E.keys()), 'entradas': {f'secoes_indicadores_{eid}.parquet': sha256_file(SRC / f'secoes_indicadores_{eid}.parquet') for eid in E}}
+    (OUT / 'edicao.json').write_text(json.dumps(man, ensure_ascii=False, indent=1), encoding='utf-8')
+    return man
+
+
 def main():
     E = {}
     for eid in EIDS:
@@ -570,6 +606,8 @@ def main():
             continue
         E[eid] = compare(d)
         print('eleicao', eid, len(d), 'comp', int(d.BEH.sum()), 'dif(comp)', int((d.BEH & d.real).sum()), 'dif(comuns)%', round(100 * d[~d.BEH].real.mean(), 2), flush=True)
+    man = write_manifest(E)
+    print('edicao', man['edicao'], 'codigo', man['codigo_sha'][:7], 'sujo' if man['codigo_sujo'] else 'limpo', flush=True)
     T, NV = per_election_summary(E)
     REC = recorrencia(E)
     PX, PXP = pres_x_pref(E)

@@ -181,10 +181,10 @@ def charts(D):
     figs.append((save(f, '02_diferenca_real'), f'Diferença acima do limiar = pelo menos 5 pontos percentuais, em módulo, na fração do lado A, e |z| ≥ 2. A barra laranja é o mesmo teste nas seções sem comportamento: o que se espera por acaso e por variação normal. Sob cada eleição, o número de seções de cada barra. '
                  f'À esquerda, o resultado principal: no mesmo prédio, em 2026, {n(p26l.real)} de {n(p26l.n)} seções com comportamento ({n(p26l.pct_real, 1)}%) ultrapassam o limiar, contra {n(c26l.real)} de {n(c26l.n)} comuns ({n(c26l.pct_real, 1)}%): razão de {n(p26l.pct_real / c26l.pct_real, 1)}. '
                  f'À direita, as seções sem vizinha comparável (seção única ou prédio inteiro com comportamento): a referência é o município, a taxa é várias vezes maior nos dois grupos ({n(p26m.pct_real, 1)}% contra {n(c26m.pct_real, 1)}% em 2026) '
-                 'e por isso esse nível fica separado. Barras do 2º turno de prefeito têm poucas seções. Em qualquer nível, a maioria das seções com comportamento vota como a sua referência.'))
+                 'e por isso esse nível fica separado. Barras do 2º turno de prefeito têm poucas seções. Em qualquer nível, a maioria das seções com comportamento não ultrapassa o limiar frente à sua referência, o que não significa votação idêntica: significa diferença menor que 5 pontos ou dentro da variação normal.'))
     # 3 direção, por nível
     f = two_panel(D, 'pct_A', '% das diferenças acima do limiar a favor do lado A', 'Quando a seção difere da referência, para que lado pende? (por nível de comparação)', '{:.0f}%', hline=50, ncol='real')
-    figs.append((save(f, '03_direcao'), f'Lado A = PT (presidente) ou candidato líder do município (prefeito); 50% = sem direção. Sob cada eleição, o número de diferenças acima do limiar de cada barra. No mesmo prédio, em 2026, {n(p26l.pct_A, 0)}% das diferenças das seções com comportamento pendem para o PT, contra {n(c26l.pct_A, 0)}% nas comuns; '
+    figs.append((save(f, '03_direcao'), f'Lado A = PT (presidente) ou candidato líder do município (prefeito); a linha de 50% marca divisão igual entre A e B, não uma neutralidade esperada: a referência relevante é a barra laranja das seções comuns. Sob cada eleição, o número de diferenças acima do limiar de cada barra. No mesmo prédio, em 2026, {n(p26l.pct_A, 0)}% das diferenças das seções com comportamento pendem para o PT, contra {n(c26l.pct_A, 0)}% nas comuns; '
                  f'em 2022 T1 a distância é pequena ({n(nv(D, "P2022", "com comportamento", "local").pct_A, 0)}% contra {n(nv(D, "P2022", "comuns", "local").pct_A, 0)}%). Nas eleições de prefeito não se observa direção consistente, e as bases são pequenas. '
                  'No nível município ambos os grupos pendem para A, o que mostra por que misturar níveis infla a leitura. Direção não é causa: pode refletir o perfil de quem enfrenta fila.'))
     # 4 permutação: faixa do acaso (quantis do nulo, dois esquemas) e ponto observado; só os indicadores que definem o comportamento da varredura
@@ -202,7 +202,7 @@ def charts(D):
     ax.set_ylabel('diferença (A − B) dentro do mesmo local, p.p.'); ax.legend(loc='upper right', fontsize=8.5)
     ax.set_title('Teste de direção nos cinco indicadores do comportamento (faixas = acaso; ponto = observado)')
     figs.append((save(f, '04_permutacao'), 'Cada ponto é a diferença de votação (lado A menos lado B) entre seções sinalizadas e não sinalizadas, medida como desvio da média do próprio local e ponderada por votos válidos. '
-                 'As faixas vão do percentil 2,5 ao 97,5 das diferenças obtidas embaralhando a sinalização 500 vezes: a larga, dentro do município; a fina e escura, dentro do próprio local (mais fiel à pergunta do mesmo prédio). Ponto fora das faixas = diferença maior que o acaso. '
+                 'As faixas vão do percentil 2,5 ao 97,5 das diferenças obtidas embaralhando a sinalização 500 vezes: a larga, dentro do município; a fina e escura, dentro do próprio local (mais fiel à pergunta do mesmo prédio). Ponto fora das faixas = diferença maior do que o embaralhamento produziu em 95% das vezes, sob a hipótese de sinalização ao acaso; não é medida de importância nem de causa. '
                  'Os dois esquemas dão o mesmo veredito em todos os casos. Em prefeito 2024 nenhum ponto sai da faixa. Comparecimento, cancelamentos e os escores combinados não definem o comportamento da varredura e estão só na tabela do documento técnico.'))
     # 5 locais por UF e prioridade
     f, ax = plt.subplots(figsize=(10, 4.6))
@@ -264,7 +264,8 @@ def charts(D):
     f.suptitle('Prefeito × presidente, nas mesmas seções, com denominadores', x=.01, ha='left', fontsize=12, fontweight='bold')
     pp = PXP[(PXP.recorte == 'todas')]
     pp26 = pp[pp.par.str.contains('2026')].iloc[0] if pp.par.str.contains('2026').any() else None
-    cap8 = ('Mesmas seções nas três eleições de primeiro turno, com denominadores explícitos. Entre as seções com comportamento, a fração que ultrapassa o limiar é da mesma ordem nos dois cargos (um pouco maior na municipal no painel de todas as seções, não no do mesmo prédio). '
+    cap8 = ('Mesmas seções nas três eleições de primeiro turno, com denominadores explícitos. No painel da direita, o recorte “mesmo prédio” é aplicado eleição a eleição, por isso os denominadores mudam entre os cargos. '
+            'Entre as seções com comportamento, a fração que ultrapassa o limiar é da mesma ordem nos dois cargos (um pouco maior na municipal no painel de todas as seções, não no do mesmo prédio). '
             'A contagem bruta de seções com desvio “só nas presidenciais” é muito maior porque há muito mais seções com fila nos 1º turnos presidenciais, não porque elas desviem mais.')
     if pp26 is not None:
         cap8 += (f' Comparação estrita, seções com comportamento nos dois cargos ({pp26.par}, {n(pp26.secoes_com_comportamento_em_ambas)} seções): {n(pp26.pct_dif_presidencial, 1)}% contra {n(pp26.pct_dif_municipal, 1)}% '

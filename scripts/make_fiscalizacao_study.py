@@ -169,6 +169,12 @@ def flags(d):
     return d
 
 
+def place_wmean(df, col, w='valid_votes'):
+    """Média de `col` no local de votação PONDERADA por votos válidos: a mesma referência usada no teste de permutação e na varredura."""
+    ww = df[w].astype(float)
+    return (df[col] * ww).groupby(df.place).transform('sum') / ww.groupby(df.place).transform('sum')
+
+
 def perm_test(d, flag, y='diff_ab', reps=REPS):
     """Diferença (A − B) entre seções sinalizadas e não sinalizadas, medida como desvio da média PONDERADA do próprio local.
     Dois esquemas de embaralhamento da sinalização: dentro do município (colunas sem sufixo) e dentro do local de votação (sufixo _local).
@@ -186,7 +192,7 @@ def perm_test(d, flag, y='diff_ab', reps=REPS):
         return np.average(yr[ff], weights=w[ff]) - np.average(yr[~ff], weights=w[~ff])
     obs = stat(f)
     raw = np.average(g[y].values[f], weights=w[f]) - np.average(g[y].values[~f], weights=w[~f])
-    ra = (g.share_a - g.groupby('place').share_a.transform('mean')).values
+    ra = (g.share_a - place_wmean(g, 'share_a')).values
     out = dict(flag=flag, n_flag=int(f.sum()), n=len(g), raw_diff=raw, within_place_diff=obs, excess_votes_a=float((ra / 100 * w)[f].sum()),
                share_a_flag=np.average(g.share_a.values[f], weights=w[f]), share_a_rest=np.average(g.share_a.values[~f], weights=w[~f]))
     for suffix, key in (('', g.mun), ('_local', g.place)):
@@ -236,7 +242,7 @@ def run():
                 tests.append(r)
                 print('test', eid, f, round(r['within_place_diff'], 3), r['p_perm'], flush=True)
         g = d[(d.eligible >= 50) & d.valid_votes.gt(0)].copy()
-        g['ra'] = g.share_a - g.groupby('place').share_a.transform('mean')
+        g['ra'] = g.share_a - place_wmean(g, 'share_a')
         for k in range(4):
             s = g[(g.score == k) if k < 3 else (g.score >= 3)]
             if len(s) < 5:
@@ -257,7 +263,7 @@ def run():
                ['after_17_recorded', 'late_share', 'manual_sequence_votes', 'manual_resid', 'after_17_manual_sequence', 'late_interval_median_seconds', 'last_vote', 'close_min', 'swap', 'contingency',
                 'cand_a', 'share_a', 'cand_b', 'share_b', 'winner_party', 'winner_pct']
         L = d[d.score >= 2][cols].copy()
-        L['resid_a_place'] = (d.share_a - d.groupby('place').share_a.transform('mean'))[L.index]
+        L['resid_a_place'] = (d.share_a - place_wmean(d, 'share_a'))[L.index]
         lists.append(L)
     R, T, S, SC, L = pd.DataFrame(results), pd.DataFrame(tests), pd.DataFrame(by_state), pd.DataFrame(score_tab), pd.concat(lists, ignore_index=True)
     T['q'] = bh(T.p_perm.values)
@@ -306,7 +312,7 @@ def pdf(R, T, S, SC, L, prio, zones):
                     'pergunta apenas se as seções desviantes votam diferente das vizinhas do mesmo local de votação.', P),
           Paragraph(f'Método do teste: diferença (A − B) entre seções sinalizadas e não sinalizadas, medida como desvio da média ponderada do próprio local de votação (remove bairro/eleitorado), ponderada por votos válidos. '
                     f'p = fração de {REPS} embaralhamentos da sinalização que produzem diferença igual ou maior em módulo (bilateral), em dois esquemas: dentro do município e, como sensibilidade mais fiel à pergunta do mesmo prédio, '
-                    'dentro do próprio local de votação (colunas “local”). q = correção para múltiplos testes (Benjamini–Hochberg). “Excesso de votos do lado A” = soma, nas seções sinalizadas, de (% do lado A na seção − % no local) × votos válidos: ordem de grandeza, não efeito. '
+                    'dentro do próprio local de votação (colunas “local”). q = correção para múltiplos testes (Benjamini–Hochberg). “Excesso de votos do lado A” = soma, nas seções sinalizadas, de (% do lado A na seção − média PONDERADA por votos válidos do local) × votos válidos: ordem de grandeza descritiva, não efeito nem votos irregulares. '
                     'Associação não é causa: a direção pode refletir o perfil de quem enfrenta fila.', NOTE),
           Paragraph('1. Indicadores e sinalizações (seções com ≥50 eleitores e log completo, salvo comparecimento e encerramento)', H2)]
     t = [['Eleição', 'Seções', 'Com log', 'Log completo', 'Contingência / recarregadas', 'Votos após 17h (todos os logs)', '… em contingência', 'Manuais', 'Manuais após 17h'] + [f.replace('f_', '') for f in FCOLS] + ['score 0', '1', '2', '3', '4+']]
