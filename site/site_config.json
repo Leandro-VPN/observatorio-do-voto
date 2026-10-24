@@ -8,8 +8,8 @@
   "pix_chave": "4cc4708e-e291-4012-ab41-3c67eab901c9",
   "pix_titular": "Leandro de Almeida Miguel",
   "meta_apoio": "R$ 5.000",
-  "release_tag": "dados-2026-10-24",
-  "release_url": "https://github.com/Leandro-VPN/observatorio-do-voto/releases/tag/dados-2026-10-24",
+  "release_tag": "dados-2026-10-24-r2",
+  "release_url": "https://github.com/Leandro-VPN/observatorio-do-voto/releases/tag/dados-2026-10-24-r2",
   "release_assets": [
     "relatorios/fiscalizacao/secoes_indicadores_P2022.parquet",
     "relatorios/fiscalizacao/secoes_indicadores_P2022b.parquet",

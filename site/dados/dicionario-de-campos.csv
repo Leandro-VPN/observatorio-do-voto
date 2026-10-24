@@ -1,33 +1,734 @@
-﻿campo;descricao;origem
-O que é;Varredura por local de votação: seções com votação tardia e/ou habilitação manual excessiva, comparadas às demais seções do mesmo local, em 2022 (T1/T2), 2024 (prefeito, T1/T2) e 2026 (T1). 11 estados.;varredura
-TARDIO;Fração de votos após 17h > P99 do estado (≥20 votos) OU último voto ≥19h OU encerramento >60 min após 17h sem troca de urna.;varredura
-MANUAL;"Habilitação manual pelo mesário acima do esperado para a seção (biometria cadastrada, idade, escolaridade; resíduo > P99) OU ≥10 habilitações manuais após 17h.";varredura
-Comportamento;TARDIO ou MANUAL. Seção elegível: ≥50 aptos e votos válidos > 0.;varredura
-Lado A / lado B;Presidente: PT / PL. Prefeito: candidato líder do município / 2º colocado. Direção e pontos de direção usam só as presidenciais.;varredura
-Comparação (pares);"Outras seções do mesmo local SEM comportamento. cmp_level: ""local"" (≥3 pares) é o resultado principal; ""local (poucos pares)"" (1–2; dispersão tomada do município); ""município"" (sem par comum no local: seção única ou prédio em que todas as demais seções também têm comportamento). A taxa-base de ""diferença acima do limiar"" é 2 a 6 vezes maior no nível município; ver comparacao_por_nivel.csv.";varredura
-dif;% do lado A na seção − % nos pares (p.p., ponderado por votos válidos).;varredura
-z;dif ÷ raiz(variância dos pares + erro binomial da seção). Mede se a diferença é maior do que a variação normal entre seções do mesmo local.;varredura
-Diferença acima do limiar;"|dif| ≥ 5 p.p. e |z| ≥ 2. Nas colunas chama-se ""real"" (nome herdado). Nas seções comuns, o mesmo teste (cada uma contra as demais) dá a taxa-base esperada por acaso, por nível.";varredura
-dif_comp;Comparecimento da seção − comparecimento dos pares (p.p.).;varredura
-Local inteiro;Quando ≥50% das seções do local têm comportamento, o local é comparado às seções comuns do município (dif_local_mun, z_local_mun). Referência mais fraca que o próprio prédio.;varredura
-padrao_comportamento;"Por seção: em que tipo de eleição o comportamento aparece. ""Só presidenciais"" exige que a seção exista nos dados de prefeito; ""só municipais"" exige que exista nos de presidente.";varredura
-padrao_desvio_resultado;"Por seção: em que tipo de eleição a diferença acima do limiar aparece. A contagem bruta reflete quantas seções têm comportamento em cada tipo de eleição; ver pres_x_pref_pareado.csv para a comparação com denominadores.";varredura
-direcao;Nas diferenças acima do limiar das presidenciais: sempre A, sempre B ou mista. Prefeito: pref_favor_lider / pref_favor_segundo, à parte.;varredura
-pontos;"Soma transparente (máx 100): recorrência (21), desvio acima do limiar nas presidenciais (25), direção única nas presidenciais (8), comportamento em 2026 T1 (12) + diferença em 2026 T1 (9), local inteiro atípico (8), volume de tardios/manuais (12), ≥2 seções com desvio só nas presidenciais (5; redundante com o desvio presidencial, mantido com registro).";varredura
-pts_operacional / pts_resultado;Operacional = recorrência + volume + seções com comportamento em 2026 T1 + local inteiro sem desvio (4). Resultado = desvio por seção, direção única, ≥2 desvios só nas presidenciais, diferenças em 2026 T1, local inteiro com |z|≥2 frente ao município (8).;varredura
-sinal_resultado;nenhum / só local (vs município) / seções / seções + local: de onde vem o sinal de resultado do local, se houver.;varredura
-prioridade_observacao;"Prioridade de observação presencial: alta ≥45 pontos; média 25–44; baixa <25. É ordem de prioridade, não probabilidade nem estimativa de irregularidade. Locais sem nenhuma seção com diferença acima do limiar podem ser de prioridade alta por fila/habilitação manual recorrentes, volume e prédio inteiro divergente. nivel_risco = mesmo valor (nome anterior).";varredura
-secoes_a_checar;Seções do local com comportamento em 2026 T1 ou recorrentes (2+ eleições).;varredura
-prioridade_2026_T2;Locais com seções presentes em 2026 e comportamento em 2026 T1 ou recorrente, ordenados por pontos. Uso: alocar fiscais, observar fila, habilitação manual e encerramento.;varredura
-Limites;"Nada aqui observa compra de voto, coação ou intenção; mede desvio operacional e de resultado frente aos vizinhos. Não se sabe em quem votaram os eleitores tardios ou habilitados manualmente; compara-se a seção inteira. Seções do mesmo prédio podem ter eleitorados distintos. Sinalização não é acusação.";varredura
-Registro de alterações;"24/10/2026: estratificação por nível de comparação; direção só nas presidenciais; cruzamento prefeito × presidente pareado; rótulo ""prioridade de observação""; pontos operacionais × resultado; componente ""só presidenciais"" renomeado, peso mantido. Maranhão incluído (11 estados).";varredura
-Para que serve;Mapa para posicionar fiscais no 2º turno de 2026 (25/10/2026). Vem da varredura por local de votação: locais de prioridade de observação ALTA e MÉDIA, com as seções a checar. 11 estados.;mapa_2026_T2
-Como foi feito;Seções com votação tardia (após 17h acima do P99 do estado, último voto após 19h ou encerramento >60 min sem troca de urna) e/ou habilitação manual pelo mesário acima do esperado, comparadas às demais seções do mesmo local. A prioridade do local soma recorrência, diferença acima do limiar frente às vizinhas, direção (presidenciais), comportamento em 2026 T1, volume e local inteiro atípico.;mapa_2026_T2
-Prioridade, não risco;"A prioridade é uma ordem para observação presencial, não probabilidade de irregularidade. pts_operacional (fila/manual recorrente, volume, comportamento em 2026) e pts_resultado (diferenças de resultado) vêm separados; sinal_resultado diz se o local tem alguma seção com diferença acima do limiar (""seções""), só o prédio inteiro divergindo do município (""só local"") ou nenhum.";mapa_2026_T2
-Seções a checar;Seções do local com comportamento em 2026 T1 ou recorrentes (2+ eleições), existentes em 2026. A coluna comportamento_2026_T1 diz o que ocorreu no 1º turno.;mapa_2026_T2
-Aba resumo_zonas;Locais alta/média por zona e sugestão de fiscais (1 por local de prioridade alta + 1 a cada 2 de média). É ponto de partida para alocação, não regra.;mapa_2026_T2
-Aba locais;"Um local por linha, ordenado por zona e prioridade; pts_* mostram de onde vêm os pontos.";mapa_2026_T2
-Aba secoes_checklist;Uma seção por linha, com motivos, o que observar e colunas em branco para o fiscal preencher (chegada, fila às 17h, habilitações manuais, último voto, encerramento, troca de urna, observações).;mapa_2026_T2
-O que observar;"Fila e votação após 17h (horário do último voto e do encerramento); habilitação manual de eleitor sem biometria (quantas e com que justificativa); troca/contingência de urna; coordenação do prédio quando o local inteiro se comporta assim.";mapa_2026_T2
-Lado A / B;"Presidente: PT / PL. dif_2026_T1_pp = % do lado A na seção menos % nas seções vizinhas sem comportamento (ou nas seções comuns do município, quando não há vizinha comparável: marcado ""(vs município)""); dif_real = a diferença supera o limiar do estudo (|z| ≥ 2 e ≥5 p.p.).";mapa_2026_T2
-Limites;"Nada aqui observa compra de voto ou intenção, nem em quem votaram os eleitores tardios ou habilitados manualmente; mede desvio operacional e de resultado frente aos vizinhos. Sinalização não é acusação. Use para olhar presencialmente e registrar.";mapa_2026_T2
+﻿arquivo;coluna;tipo;nulos_pct;exemplo;descricao
+varredura-locais.zip/resumo_por_eleicao.csv;eid;str;0,0;P2022;Identificador da eleição: P2022, P2022b, M2024, M2024b, P2026.
+varredura-locais.zip/resumo_por_eleicao.csv;eleicao;str;0,0;Pres 2022 T1;Rótulo da eleição.
+varredura-locais.zip/resumo_por_eleicao.csv;secoes;int64;0,0;366601;
+varredura-locais.zip/resumo_por_eleicao.csv;com_comportamento;int64;0,0;38473;Seções com comportamento.
+varredura-locais.zip/resumo_por_eleicao.csv;tardia;int64;0,0;35628;
+varredura-locais.zip/resumo_por_eleicao.csv;manual;int64;0,0;8635;
+varredura-locais.zip/resumo_por_eleicao.csv;tardia_e_manual;int64;0,0;5790;
+varredura-locais.zip/resumo_por_eleicao.csv;cmp_local;int64;0,0;16013;Nível de comparação na eleição local
+varredura-locais.zip/resumo_por_eleicao.csv;cmp_local_poucos;int64;0,0;11147;Nível de comparação na eleição local_poucos
+varredura-locais.zip/resumo_por_eleicao.csv;cmp_municipio;int64;0,0;11313;Nível de comparação na eleição municipio
+varredura-locais.zip/resumo_por_eleicao.csv;municipio_secao_unica;int64;0,0;3768;
+varredura-locais.zip/resumo_por_eleicao.csv;municipio_predio_sem_par;int64;0,0;7545;
+varredura-locais.zip/resumo_por_eleicao.csv;sem_comparacao;int64;0,0;17;
+varredura-locais.zip/resumo_por_eleicao.csv;dif_real_com_comportamento;int64;0,0;1535;diff_a na eleição real_com_comportamento
+varredura-locais.zip/resumo_por_eleicao.csv;pct_real_com_comportamento;float64;0,0;3.99;
+varredura-locais.zip/resumo_por_eleicao.csv;pct_real_secoes_comuns;float64;0,0;2.976;
+varredura-locais.zip/resumo_por_eleicao.csv;dif_real_favor_A;int64;0,0;1139;diff_a na eleição real_favor_A
+varredura-locais.zip/resumo_por_eleicao.csv;dif_real_favor_B;int64;0,0;396;diff_a na eleição real_favor_B
+varredura-locais.zip/resumo_por_eleicao.csv;comuns_real_favor_A;int64;0,0;6098;Seções comuns: real_favor_A
+varredura-locais.zip/resumo_por_eleicao.csv;comuns_real_favor_B;int64;0,0;3667;Seções comuns: real_favor_B
+varredura-locais.zip/resumo_por_eleicao.csv;real_municipio;int64;0,0;899;Acima do limiar na eleição municipio
+varredura-locais.zip/resumo_por_eleicao.csv;real_local;int64;0,0;549;Acima do limiar na eleição local
+varredura-locais.zip/resumo_por_eleicao.csv;real_local_poucos;int64;0,0;87;Acima do limiar na eleição local_poucos
+varredura-locais.zip/resumo_por_eleicao.csv;local_com_comportamento;int64;0,0;16013;Nível local: com_comportamento
+varredura-locais.zip/resumo_por_eleicao.csv;local_dif_real;int64;0,0;549;Nível local: dif_real
+varredura-locais.zip/resumo_por_eleicao.csv;local_pct_real_com_comportamento;float64;0,0;3.428;Nível local: pct_real_com_comportamento
+varredura-locais.zip/resumo_por_eleicao.csv;local_comuns;int64;0,0;273894;Nível local: comuns
+varredura-locais.zip/resumo_por_eleicao.csv;local_comuns_real;int64;0,0;6994;Nível local: comuns_real
+varredura-locais.zip/resumo_por_eleicao.csv;local_pct_real_secoes_comuns;float64;0,0;2.554;Nível local: pct_real_secoes_comuns
+varredura-locais.zip/resumo_por_eleicao.csv;local_favor_A;int64;0,0;346;Nível local: favor_A
+varredura-locais.zip/resumo_por_eleicao.csv;local_favor_B;int64;0,0;203;Nível local: favor_B
+varredura-locais.zip/resumo_por_eleicao.csv;local_comuns_favor_A;int64;0,0;4014;Nível local: comuns_favor_A
+varredura-locais.zip/resumo_por_eleicao.csv;local_comuns_favor_B;int64;0,0;2980;Nível local: comuns_favor_B
+varredura-locais.zip/resumo_por_eleicao.csv;local_pct_A;float64;0,0;63.024;Nível local: pct_A
+varredura-locais.zip/resumo_por_eleicao.csv;local_comuns_pct_A;float64;0,0;57.392;Nível local: comuns_pct_A
+varredura-locais.zip/resumo_por_eleicao.csv;or_mantel_haenszel;float64;0,0;1.288;Razão de chances de Mantel–Haenszel por nível.
+varredura-locais.zip/resumo_por_eleicao.csv;dif_media_pp;float64;0,0;1.1;diff_a na eleição media_pp
+varredura-locais.zip/resumo_por_eleicao.csv;dif_media_pp_real;float64;0,0;8.779;diff_a na eleição media_pp_real
+varredura-locais.zip/resumo_por_eleicao.csv;comparecimento_dif_media_pp;float64;0,0;-0.133;
+varredura-locais.zip/resumo_por_eleicao.csv;vencedor_difere;int64;0,0;2603;
+varredura-locais.zip/resumo_por_eleicao.csv;excesso_A_votos_real;float64;0,0;37250.399;
+varredura-locais.zip/resumo_por_eleicao.csv;pct_excesso_alem_tardios;float64;0,0;86.479;
+varredura-locais.zip/resumo_por_eleicao.csv;votos_apos_17h;int64;0,0;1914249;
+varredura-locais.zip/resumo_por_eleicao.csv;manuais_apos_17h;int64;0,0;192228;
+varredura-locais.zip/resumo_por_eleicao.csv;locais_inteiros;int64;0,0;6690;
+varredura-locais.zip/comparacao_por_nivel.csv;eid;str;0,0;P2022;Identificador da eleição: P2022, P2022b, M2024, M2024b, P2026.
+varredura-locais.zip/comparacao_por_nivel.csv;eleicao;str;0,0;Pres 2022 T1;Rótulo da eleição.
+varredura-locais.zip/comparacao_por_nivel.csv;grupo;str;0,0;com comportamento;com comportamento / comuns.
+varredura-locais.zip/comparacao_por_nivel.csv;nivel;str;0,0;local;Nível de comparação.
+varredura-locais.zip/comparacao_por_nivel.csv;n;int64;0,0;16013;Seções no grupo/nível.
+varredura-locais.zip/comparacao_por_nivel.csv;real;int64;0,0;549;Diferença acima do limiar (|diff_a|≥5 e |z|≥2). Nome herdado.
+varredura-locais.zip/comparacao_por_nivel.csv;favor_A;int64;0,0;346;Diferenças acima do limiar a favor de A (presidenciais).
+varredura-locais.zip/comparacao_por_nivel.csv;favor_B;int64;0,0;203;Idem a favor de B.
+varredura-locais.zip/comparacao_por_nivel.csv;pct_real;float64;0,0;3.428;% com diferença acima do limiar.
+varredura-locais.zip/comparacao_por_nivel.csv;pct_A;float64;3,3;63.024;% das diferenças a favor de A.
+varredura-locais.zip/comparacao_por_nivel.csv;dif_media_pp;float64;0,0;0.224;diff_a na eleição media_pp
+varredura-locais.zip/pres_x_pref_pareado.csv;eleicao;str;0,0;Pres 2022 T1;Rótulo da eleição.
+varredura-locais.zip/pres_x_pref_pareado.csv;eid;str;0,0;P2022;Identificador da eleição: P2022, P2022b, M2024, M2024b, P2026.
+varredura-locais.zip/pres_x_pref_pareado.csv;recorte;str;0,0;todas;todas / local (≥3 pares).
+varredura-locais.zip/pres_x_pref_pareado.csv;presentes;int64;0,0;356214;Seções presentes nas três eleições.
+varredura-locais.zip/pres_x_pref_pareado.csv;com_comportamento;int64;0,0;37286;Seções com comportamento.
+varredura-locais.zip/pres_x_pref_pareado.csv;pct_com_comportamento;float64;0,0;10.4673;
+varredura-locais.zip/pres_x_pref_pareado.csv;com_comportamento_e_dif;int64;0,0;1470;
+varredura-locais.zip/pres_x_pref_pareado.csv;pct_dif_entre_comportamento;float64;0,0;3.9425;
+varredura-locais.zip/pres_x_pref_pareado.csv;comuns;int64;0,0;318928;
+varredura-locais.zip/pres_x_pref_pareado.csv;comuns_dif;int64;0,0;9400;Seções comuns: dif
+varredura-locais.zip/pres_x_pref_pareado.csv;pct_dif_entre_comuns;float64;0,0;2.9474;
+varredura-locais.zip/pres_x_pref_pareado.csv;favor_A;int64;0,0;1093;Diferenças acima do limiar a favor de A (presidenciais).
+varredura-locais.zip/pres_x_pref_pareado.csv;favor_B;int64;0,0;377;Idem a favor de B.
+varredura-locais.zip/pres_x_pref_mesmas_secoes.csv;par;str;0,0;Pres 2022 T1 × Pref 2024 T1;
+varredura-locais.zip/pres_x_pref_mesmas_secoes.csv;recorte;str;0,0;todas;todas / local (≥3 pares).
+varredura-locais.zip/pres_x_pref_mesmas_secoes.csv;secoes_com_comportamento_em_ambas;int64;0,0;1086;Seções na eleição com_comportamento_em_ambas
+varredura-locais.zip/pres_x_pref_mesmas_secoes.csv;dif_na_presidencial;int64;0,0;56;diff_a na eleição na_presidencial
+varredura-locais.zip/pres_x_pref_mesmas_secoes.csv;dif_na_municipal;int64;0,0;59;diff_a na eleição na_municipal
+varredura-locais.zip/pres_x_pref_mesmas_secoes.csv;pct_dif_presidencial;float64;0,0;5.1565;
+varredura-locais.zip/pres_x_pref_mesmas_secoes.csv;pct_dif_municipal;float64;0,0;5.4328;
+varredura-locais.zip/pres_x_pref_mesmas_secoes.csv;so_presidencial;int64;0,0;45;
+varredura-locais.zip/pres_x_pref_mesmas_secoes.csv;so_municipal;int64;0,0;48;
+varredura-locais.zip/pres_x_pref_mesmas_secoes.csv;p_mcnemar;float64;0,0;0.8358;p do teste de McNemar (binomial exato).
+varredura-locais.zip/recorrencia_condicional.csv;de;str;0,0;Pres 2022 T1;
+varredura-locais.zip/recorrencia_condicional.csv;para;str;0,0;Pres 2026 T1;
+varredura-locais.zip/recorrencia_condicional.csv;secoes_presentes_em_ambas;int64;0,0;357850;Seções na eleição presentes_em_ambas
+varredura-locais.zip/recorrencia_condicional.csv;com_comportamento_em;int64;0,0;37576;
+varredura-locais.zip/recorrencia_condicional.csv;pct_repete;float64;0,0;37.468;
+varredura-locais.zip/recorrencia_condicional.csv;pct_sem_comportamento_antes;float64;0,0;6.256;
+varredura-locais.zip/recorrencia_condicional.csv;razao;float64;0,0;5.989;
+varredura-locais.zip/locais_risco.csv;uf;str;0,0;PE;Sigla da UF.
+varredura-locais.zip/locais_risco.csv;municipality;int64;0,0;23353;Código TSE do município (não é IBGE).
+varredura-locais.zip/locais_risco.csv;municipality_name;str;0,0;BETÂNIA;Nome do município (TSE).
+varredura-locais.zip/locais_risco.csv;zone;int64;0,0;108;Zona eleitoral.
+varredura-locais.zip/locais_risco.csv;voting_place;int64;0,0;1058;Código do local de votação (único dentro do município).
+varredura-locais.zip/locais_risco.csv;place_name;str;16,4;ESCOLA MUNICIPAL JOSÉ CÍCERO DE AMORIM;"Nome do local de votação (perfil do eleitorado 2022; vazio quando não cadastrado)."
+varredura-locais.zip/locais_risco.csv;prioridade_observacao;str;0,0;alta;"alta ≥45; média 25–44; baixa <25. Ordem de observação, não probabilidade."
+varredura-locais.zip/locais_risco.csv;pontos;int64;0,0;98;Pontuação transparente 0–100 do local.
+varredura-locais.zip/locais_risco.csv;pts_operacional;int64;0,0;43;Pontos operacionais (recorrência, volume, comportamento 2026, local inteiro sem desvio).
+varredura-locais.zip/locais_risco.csv;pts_resultado;int64;0,0;55;Pontos de resultado (desvios acima do limiar, direção, local inteiro com |z|≥2).
+varredura-locais.zip/locais_risco.csv;sinal_resultado;str;0,0;seções + local;nenhum / só local (vs município) / seções / seções + local.
+varredura-locais.zip/locais_risco.csv;secoes_max;int64;0,0;9;Maior número de seções do local entre as eleições.
+varredura-locais.zip/locais_risco.csv;secoes_com_comportamento;int64;0,0;9;Seções do local com comportamento em alguma eleição.
+varredura-locais.zip/locais_risco.csv;recorrentes_2plus;int64;0,0;8;Seções com comportamento em 2+ eleições.
+varredura-locais.zip/locais_risco.csv;recorrentes_3plus;int64;0,0;2;Seções com comportamento em 3+ eleições.
+varredura-locais.zip/locais_risco.csv;secoes_dif_real_pres;int64;0,0;8;Seções com comportamento e diferença acima do limiar em alguma presidencial.
+varredura-locais.zip/locais_risco.csv;secoes_dif_real_pres_local;int64;0,0;0;Idem, só no nível local.
+varredura-locais.zip/locais_risco.csv;secoes_dif_real_pref;int64;0,0;0;Idem, nas eleições de prefeito.
+varredura-locais.zip/locais_risco.csv;direcao;str;91,4;sempre B;Direção das diferenças nas presidenciais: sempre A / sempre B / mista.
+varredura-locais.zip/locais_risco.csv;favor_A;int64;0,0;0;Diferenças acima do limiar a favor de A (presidenciais).
+varredura-locais.zip/locais_risco.csv;favor_B;int64;0,0;12;Idem a favor de B.
+varredura-locais.zip/locais_risco.csv;pref_favor_lider;int64;0,0;0;Diferenças a favor do líder (prefeito).
+varredura-locais.zip/locais_risco.csv;pref_favor_segundo;int64;0,0;0;Diferenças a favor do 2º (prefeito).
+varredura-locais.zip/locais_risco.csv;so_presidenciais;int64;0,0;8;Seções com comportamento só nas presidenciais.
+varredura-locais.zip/locais_risco.csv;pres_e_municipais;int64;0,0;1;Seções com comportamento nos dois tipos.
+varredura-locais.zip/locais_risco.csv;so_municipais;int64;0,0;0;Seções com comportamento só nas municipais.
+varredura-locais.zip/locais_risco.csv;desvio_so_pres;int64;0,0;8;Seções com desvio acima do limiar só nas presidenciais.
+varredura-locais.zip/locais_risco.csv;dif_media_pres;float64;5,3;-6.498;Média de diff_a nas presidenciais com comportamento (p.p.).
+varredura-locais.zip/locais_risco.csv;votos_tardios_total;int64;0,0;1250;Soma de votos após 17h das seções com comportamento, todas as eleições.
+varredura-locais.zip/locais_risco.csv;manuais_apos_17h_total;int64;0,0;175;Soma de manuais após 17h.
+varredura-locais.zip/locais_risco.csv;secoes_a_checar;str;35,5;10, 11, 13, 14, 15, 18, 25, 30, 57;Seções com comportamento em 2026 T1 ou recorrentes.
+varredura-locais.zip/locais_risco.csv;nivel_risco;str;0,0;alta;Nome anterior de prioridade_observacao.
+varredura-locais.zip/locais_risco.csv;secoes_P2022;float64;4,3;8.0;Seções na eleição P2022
+varredura-locais.zip/locais_risco.csv;comp_P2022;float64;4,3;8.0;Seções com comportamento na eleição P2022
+varredura-locais.zip/locais_risco.csv;tardio_P2022;float64;4,3;8.0;
+varredura-locais.zip/locais_risco.csv;manual_P2022;float64;4,3;8.0;
+varredura-locais.zip/locais_risco.csv;real_P2022;float64;4,3;7.0;Acima do limiar na eleição P2022
+varredura-locais.zip/locais_risco.csv;real_local_P2022;float64;4,3;0.0;Acima do limiar na eleição local_P2022
+varredura-locais.zip/locais_risco.csv;realA_P2022;float64;4,3;0.0;Acima do limiar favor A na eleição P2022
+varredura-locais.zip/locais_risco.csv;realB_P2022;float64;4,3;7.0;Acima do limiar favor B na eleição P2022
+varredura-locais.zip/locais_risco.csv;tardios_P2022;float64;4,3;700.0;Votos após 17h na eleição P2022
+varredura-locais.zip/locais_risco.csv;manuais17_P2022;float64;4,3;125.0;Manuais após 17h na eleição P2022
+varredura-locais.zip/locais_risco.csv;excessoA_P2022;float64;4,3;-143.771;
+varredura-locais.zip/locais_risco.csv;vencdif_P2022;float64;4,3;0.0;
+varredura-locais.zip/locais_risco.csv;inteiro_P2022;object;4,3;True;Local inteiro na eleição P2022
+varredura-locais.zip/locais_risco.csv;dif_local_mun_P2022;float64;4,3;-7.162;diff_a na eleição local_mun_P2022
+varredura-locais.zip/locais_risco.csv;z_local_mun_P2022;float64;4,3;-11.872;z na eleição local_mun_P2022
+varredura-locais.zip/locais_risco.csv;A_local_P2022;float64;4,3;82.996;% do lado A na eleição local_P2022
+varredura-locais.zip/locais_risco.csv;secoes_P2022b;float64;4,3;8.0;Seções na eleição P2022b
+varredura-locais.zip/locais_risco.csv;comp_P2022b;float64;4,3;1.0;Seções com comportamento na eleição P2022b
+varredura-locais.zip/locais_risco.csv;tardio_P2022b;float64;4,3;0.0;
+varredura-locais.zip/locais_risco.csv;manual_P2022b;float64;4,3;1.0;
+varredura-locais.zip/locais_risco.csv;real_P2022b;float64;4,3;0.0;Acima do limiar na eleição P2022b
+varredura-locais.zip/locais_risco.csv;real_local_P2022b;float64;4,3;0.0;Acima do limiar na eleição local_P2022b
+varredura-locais.zip/locais_risco.csv;realA_P2022b;float64;4,3;0.0;Acima do limiar favor A na eleição P2022b
+varredura-locais.zip/locais_risco.csv;realB_P2022b;float64;4,3;0.0;Acima do limiar favor B na eleição P2022b
+varredura-locais.zip/locais_risco.csv;tardios_P2022b;float64;4,3;0.0;Votos após 17h na eleição P2022b
+varredura-locais.zip/locais_risco.csv;manuais17_P2022b;float64;4,3;0.0;Manuais após 17h na eleição P2022b
+varredura-locais.zip/locais_risco.csv;excessoA_P2022b;float64;4,3;0.0;
+varredura-locais.zip/locais_risco.csv;vencdif_P2022b;float64;4,3;0.0;
+varredura-locais.zip/locais_risco.csv;inteiro_P2022b;object;4,3;False;Local inteiro na eleição P2022b
+varredura-locais.zip/locais_risco.csv;dif_local_mun_P2022b;float64;4,3;-3.533;diff_a na eleição local_mun_P2022b
+varredura-locais.zip/locais_risco.csv;z_local_mun_P2022b;float64;4,3;-2.806;z na eleição local_mun_P2022b
+varredura-locais.zip/locais_risco.csv;A_local_P2022b;float64;4,3;85.163;% do lado A na eleição local_P2022b
+varredura-locais.zip/locais_risco.csv;secoes_M2024;float64;2,0;9.0;Seções na eleição M2024
+varredura-locais.zip/locais_risco.csv;comp_M2024;float64;2,0;1.0;Seções com comportamento na eleição M2024
+varredura-locais.zip/locais_risco.csv;tardio_M2024;float64;2,0;0.0;
+varredura-locais.zip/locais_risco.csv;manual_M2024;float64;2,0;1.0;
+varredura-locais.zip/locais_risco.csv;real_M2024;float64;2,0;0.0;Acima do limiar na eleição M2024
+varredura-locais.zip/locais_risco.csv;real_local_M2024;float64;2,0;0.0;Acima do limiar na eleição local_M2024
+varredura-locais.zip/locais_risco.csv;realA_M2024;float64;2,0;0.0;Acima do limiar favor A na eleição M2024
+varredura-locais.zip/locais_risco.csv;realB_M2024;float64;2,0;0.0;Acima do limiar favor B na eleição M2024
+varredura-locais.zip/locais_risco.csv;tardios_M2024;float64;2,0;9.0;Votos após 17h na eleição M2024
+varredura-locais.zip/locais_risco.csv;manuais17_M2024;float64;2,0;2.0;Manuais após 17h na eleição M2024
+varredura-locais.zip/locais_risco.csv;excessoA_M2024;float64;2,0;0.0;
+varredura-locais.zip/locais_risco.csv;vencdif_M2024;float64;2,0;1.0;
+varredura-locais.zip/locais_risco.csv;inteiro_M2024;object;2,0;False;Local inteiro na eleição M2024
+varredura-locais.zip/locais_risco.csv;dif_local_mun_M2024;float64;2,0;4.962;diff_a na eleição local_mun_M2024
+varredura-locais.zip/locais_risco.csv;z_local_mun_M2024;float64;3,1;1.773;z na eleição local_mun_M2024
+varredura-locais.zip/locais_risco.csv;A_local_M2024;float64;2,0;56.668;% do lado A na eleição local_M2024
+varredura-locais.zip/locais_risco.csv;secoes_M2024b;float64;91,2;17.0;Seções na eleição M2024b
+varredura-locais.zip/locais_risco.csv;comp_M2024b;float64;91,2;0.0;Seções com comportamento na eleição M2024b
+varredura-locais.zip/locais_risco.csv;tardio_M2024b;float64;91,2;0.0;
+varredura-locais.zip/locais_risco.csv;manual_M2024b;float64;91,2;0.0;
+varredura-locais.zip/locais_risco.csv;real_M2024b;float64;91,2;0.0;Acima do limiar na eleição M2024b
+varredura-locais.zip/locais_risco.csv;real_local_M2024b;float64;91,2;0.0;Acima do limiar na eleição local_M2024b
+varredura-locais.zip/locais_risco.csv;realA_M2024b;float64;91,2;0.0;Acima do limiar favor A na eleição M2024b
+varredura-locais.zip/locais_risco.csv;realB_M2024b;float64;91,2;0.0;Acima do limiar favor B na eleição M2024b
+varredura-locais.zip/locais_risco.csv;tardios_M2024b;float64;91,2;0.0;Votos após 17h na eleição M2024b
+varredura-locais.zip/locais_risco.csv;manuais17_M2024b;float64;91,2;0.0;Manuais após 17h na eleição M2024b
+varredura-locais.zip/locais_risco.csv;excessoA_M2024b;float64;91,2;0.0;
+varredura-locais.zip/locais_risco.csv;vencdif_M2024b;float64;91,2;0.0;
+varredura-locais.zip/locais_risco.csv;inteiro_M2024b;object;91,2;False;Local inteiro na eleição M2024b
+varredura-locais.zip/locais_risco.csv;dif_local_mun_M2024b;float64;91,2;-1.268;diff_a na eleição local_mun_M2024b
+varredura-locais.zip/locais_risco.csv;z_local_mun_M2024b;float64;91,2;-0.902;z na eleição local_mun_M2024b
+varredura-locais.zip/locais_risco.csv;A_local_M2024b;float64;91,2;49.684;% do lado A na eleição local_M2024b
+varredura-locais.zip/locais_risco.csv;secoes_P2026;float64;0,8;9.0;Seções na eleição P2026
+varredura-locais.zip/locais_risco.csv;comp_P2026;float64;0,8;9.0;Seções com comportamento na eleição P2026
+varredura-locais.zip/locais_risco.csv;tardio_P2026;float64;0,8;9.0;
+varredura-locais.zip/locais_risco.csv;manual_P2026;float64;0,8;1.0;
+varredura-locais.zip/locais_risco.csv;real_P2026;float64;0,8;5.0;Acima do limiar na eleição P2026
+varredura-locais.zip/locais_risco.csv;real_local_P2026;float64;0,8;0.0;Acima do limiar na eleição local_P2026
+varredura-locais.zip/locais_risco.csv;realA_P2026;float64;0,8;0.0;Acima do limiar favor A na eleição P2026
+varredura-locais.zip/locais_risco.csv;realB_P2026;float64;0,8;5.0;Acima do limiar favor B na eleição P2026
+varredura-locais.zip/locais_risco.csv;tardios_P2026;float64;0,8;539.0;Votos após 17h na eleição P2026
+varredura-locais.zip/locais_risco.csv;manuais17_P2026;float64;0,8;48.0;Manuais após 17h na eleição P2026
+varredura-locais.zip/locais_risco.csv;excessoA_P2026;float64;0,8;-108.272;
+varredura-locais.zip/locais_risco.csv;vencdif_P2026;float64;0,8;0.0;
+varredura-locais.zip/locais_risco.csv;inteiro_P2026;object;0,8;True;Local inteiro na eleição P2026
+varredura-locais.zip/locais_risco.csv;dif_local_mun_P2026;float64;0,8;-6.076;diff_a na eleição local_mun_P2026
+varredura-locais.zip/locais_risco.csv;z_local_mun_P2026;float64;0,8;-9.279;z na eleição local_mun_P2026
+varredura-locais.zip/locais_risco.csv;A_local_P2026;float64;0,8;81.36;% do lado A na eleição local_P2026
+varredura-locais.zip/locais_risco.csv;pts_recorrencia;int64;0,0;19;Pontos do componente recorrencia
+varredura-locais.zip/locais_risco.csv;pts_desvio_real_pres;int64;0,0;25;Pontos do componente desvio_real_pres
+varredura-locais.zip/locais_risco.csv;pts_direcao_unica;int64;0,0;8;Pontos do componente direcao_unica
+varredura-locais.zip/locais_risco.csv;pts_comportamento_2026_comp;int64;0,0;12;Pontos do componente comportamento_2026_comp
+varredura-locais.zip/locais_risco.csv;pts_comportamento_2026_real;int64;0,0;9;Pontos do componente comportamento_2026_real
+varredura-locais.zip/locais_risco.csv;pts_local_inteiro;int64;0,0;8;Pontos do componente local_inteiro
+varredura-locais.zip/locais_risco.csv;pts_volume;int64;0,0;12;Pontos do componente volume
+varredura-locais.zip/locais_risco.csv;pts_desvio_2plus_pres;int64;0,0;5;Pontos do componente desvio_2plus_pres
+varredura-locais.zip/locais_risco.csv;pts_comportamento_2026;int64;0,0;21;Pontos do componente comportamento_2026
+varredura-locais.zip/locais_risco.csv;pts_so_presidenciais;int64;0,0;5;Pontos do componente so_presidenciais
+varredura-locais.zip/prioridade_locais_2026_T2.csv;uf;str;0,0;PE;Sigla da UF.
+varredura-locais.zip/prioridade_locais_2026_T2.csv;municipality;int64;0,0;23353;Código TSE do município (não é IBGE).
+varredura-locais.zip/prioridade_locais_2026_T2.csv;municipality_name;str;0,0;BETÂNIA;Nome do município (TSE).
+varredura-locais.zip/prioridade_locais_2026_T2.csv;zone;int64;0,0;108;Zona eleitoral.
+varredura-locais.zip/prioridade_locais_2026_T2.csv;voting_place;int64;0,0;1058;Código do local de votação (único dentro do município).
+varredura-locais.zip/prioridade_locais_2026_T2.csv;place_name;str;15,6;ESCOLA MUNICIPAL JOSÉ CÍCERO DE AMORIM;"Nome do local de votação (perfil do eleitorado 2022; vazio quando não cadastrado)."
+varredura-locais.zip/prioridade_locais_2026_T2.csv;prioridade_observacao;str;0,0;alta;"alta ≥45; média 25–44; baixa <25. Ordem de observação, não probabilidade."
+varredura-locais.zip/prioridade_locais_2026_T2.csv;pontos;int64;0,0;98;Pontuação transparente 0–100 do local.
+varredura-locais.zip/prioridade_locais_2026_T2.csv;pts_operacional;int64;0,0;43;Pontos operacionais (recorrência, volume, comportamento 2026, local inteiro sem desvio).
+varredura-locais.zip/prioridade_locais_2026_T2.csv;pts_resultado;int64;0,0;55;Pontos de resultado (desvios acima do limiar, direção, local inteiro com |z|≥2).
+varredura-locais.zip/prioridade_locais_2026_T2.csv;sinal_resultado;str;0,0;seções + local;nenhum / só local (vs município) / seções / seções + local.
+varredura-locais.zip/prioridade_locais_2026_T2.csv;secoes_max;int64;0,0;9;Maior número de seções do local entre as eleições.
+varredura-locais.zip/prioridade_locais_2026_T2.csv;secoes_com_comportamento;int64;0,0;9;Seções do local com comportamento em alguma eleição.
+varredura-locais.zip/prioridade_locais_2026_T2.csv;recorrentes_2plus;int64;0,0;8;Seções com comportamento em 2+ eleições.
+varredura-locais.zip/prioridade_locais_2026_T2.csv;recorrentes_3plus;int64;0,0;2;Seções com comportamento em 3+ eleições.
+varredura-locais.zip/prioridade_locais_2026_T2.csv;secoes_dif_real_pres;int64;0,0;8;Seções com comportamento e diferença acima do limiar em alguma presidencial.
+varredura-locais.zip/prioridade_locais_2026_T2.csv;secoes_dif_real_pres_local;int64;0,0;0;Idem, só no nível local.
+varredura-locais.zip/prioridade_locais_2026_T2.csv;secoes_dif_real_pref;int64;0,0;0;Idem, nas eleições de prefeito.
+varredura-locais.zip/prioridade_locais_2026_T2.csv;direcao;str;89,7;sempre B;Direção das diferenças nas presidenciais: sempre A / sempre B / mista.
+varredura-locais.zip/prioridade_locais_2026_T2.csv;favor_A;int64;0,0;0;Diferenças acima do limiar a favor de A (presidenciais).
+varredura-locais.zip/prioridade_locais_2026_T2.csv;favor_B;int64;0,0;12;Idem a favor de B.
+varredura-locais.zip/prioridade_locais_2026_T2.csv;pref_favor_lider;int64;0,0;0;Diferenças a favor do líder (prefeito).
+varredura-locais.zip/prioridade_locais_2026_T2.csv;pref_favor_segundo;int64;0,0;0;Diferenças a favor do 2º (prefeito).
+varredura-locais.zip/prioridade_locais_2026_T2.csv;so_presidenciais;int64;0,0;8;Seções com comportamento só nas presidenciais.
+varredura-locais.zip/prioridade_locais_2026_T2.csv;pres_e_municipais;int64;0,0;1;Seções com comportamento nos dois tipos.
+varredura-locais.zip/prioridade_locais_2026_T2.csv;so_municipais;int64;0,0;0;Seções com comportamento só nas municipais.
+varredura-locais.zip/prioridade_locais_2026_T2.csv;desvio_so_pres;int64;0,0;8;Seções com desvio acima do limiar só nas presidenciais.
+varredura-locais.zip/prioridade_locais_2026_T2.csv;dif_media_pres;float64;0,3;-6.498;Média de diff_a nas presidenciais com comportamento (p.p.).
+varredura-locais.zip/prioridade_locais_2026_T2.csv;votos_tardios_total;int64;0,0;1250;Soma de votos após 17h das seções com comportamento, todas as eleições.
+varredura-locais.zip/prioridade_locais_2026_T2.csv;manuais_apos_17h_total;int64;0,0;175;Soma de manuais após 17h.
+varredura-locais.zip/prioridade_locais_2026_T2.csv;secoes_a_checar;str;0,0;10, 11, 13, 14, 15, 18, 25, 30, 57;Seções com comportamento em 2026 T1 ou recorrentes.
+varredura-locais.zip/prioridade_locais_2026_T2.csv;nivel_risco;str;0,0;alta;Nome anterior de prioridade_observacao.
+varredura-locais.zip/prioridade_locais_2026_T2.csv;secoes_P2022;float64;4,4;8.0;Seções na eleição P2022
+varredura-locais.zip/prioridade_locais_2026_T2.csv;comp_P2022;float64;4,4;8.0;Seções com comportamento na eleição P2022
+varredura-locais.zip/prioridade_locais_2026_T2.csv;tardio_P2022;float64;4,4;8.0;
+varredura-locais.zip/prioridade_locais_2026_T2.csv;manual_P2022;float64;4,4;8.0;
+varredura-locais.zip/prioridade_locais_2026_T2.csv;real_P2022;float64;4,4;7.0;Acima do limiar na eleição P2022
+varredura-locais.zip/prioridade_locais_2026_T2.csv;real_local_P2022;float64;4,4;0.0;Acima do limiar na eleição local_P2022
+varredura-locais.zip/prioridade_locais_2026_T2.csv;realA_P2022;float64;4,4;0.0;Acima do limiar favor A na eleição P2022
+varredura-locais.zip/prioridade_locais_2026_T2.csv;realB_P2022;float64;4,4;7.0;Acima do limiar favor B na eleição P2022
+varredura-locais.zip/prioridade_locais_2026_T2.csv;tardios_P2022;float64;4,4;700.0;Votos após 17h na eleição P2022
+varredura-locais.zip/prioridade_locais_2026_T2.csv;manuais17_P2022;float64;4,4;125.0;Manuais após 17h na eleição P2022
+varredura-locais.zip/prioridade_locais_2026_T2.csv;excessoA_P2022;float64;4,4;-143.771;
+varredura-locais.zip/prioridade_locais_2026_T2.csv;vencdif_P2022;float64;4,4;0.0;
+varredura-locais.zip/prioridade_locais_2026_T2.csv;inteiro_P2022;object;4,4;True;Local inteiro na eleição P2022
+varredura-locais.zip/prioridade_locais_2026_T2.csv;dif_local_mun_P2022;float64;4,5;-7.162;diff_a na eleição local_mun_P2022
+varredura-locais.zip/prioridade_locais_2026_T2.csv;z_local_mun_P2022;float64;4,5;-11.872;z na eleição local_mun_P2022
+varredura-locais.zip/prioridade_locais_2026_T2.csv;A_local_P2022;float64;4,4;82.996;% do lado A na eleição local_P2022
+varredura-locais.zip/prioridade_locais_2026_T2.csv;secoes_P2022b;float64;4,4;8.0;Seções na eleição P2022b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;comp_P2022b;float64;4,4;1.0;Seções com comportamento na eleição P2022b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;tardio_P2022b;float64;4,4;0.0;
+varredura-locais.zip/prioridade_locais_2026_T2.csv;manual_P2022b;float64;4,4;1.0;
+varredura-locais.zip/prioridade_locais_2026_T2.csv;real_P2022b;float64;4,4;0.0;Acima do limiar na eleição P2022b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;real_local_P2022b;float64;4,4;0.0;Acima do limiar na eleição local_P2022b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;realA_P2022b;float64;4,4;0.0;Acima do limiar favor A na eleição P2022b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;realB_P2022b;float64;4,4;0.0;Acima do limiar favor B na eleição P2022b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;tardios_P2022b;float64;4,4;0.0;Votos após 17h na eleição P2022b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;manuais17_P2022b;float64;4,4;0.0;Manuais após 17h na eleição P2022b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;excessoA_P2022b;float64;4,4;0.0;
+varredura-locais.zip/prioridade_locais_2026_T2.csv;vencdif_P2022b;float64;4,4;0.0;
+varredura-locais.zip/prioridade_locais_2026_T2.csv;inteiro_P2022b;object;4,4;False;Local inteiro na eleição P2022b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;dif_local_mun_P2022b;float64;4,5;-3.533;diff_a na eleição local_mun_P2022b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;z_local_mun_P2022b;float64;4,5;-2.806;z na eleição local_mun_P2022b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;A_local_P2022b;float64;4,4;85.163;% do lado A na eleição local_P2022b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;secoes_M2024;float64;1,4;9.0;Seções na eleição M2024
+varredura-locais.zip/prioridade_locais_2026_T2.csv;comp_M2024;float64;1,4;1.0;Seções com comportamento na eleição M2024
+varredura-locais.zip/prioridade_locais_2026_T2.csv;tardio_M2024;float64;1,4;0.0;
+varredura-locais.zip/prioridade_locais_2026_T2.csv;manual_M2024;float64;1,4;1.0;
+varredura-locais.zip/prioridade_locais_2026_T2.csv;real_M2024;float64;1,4;0.0;Acima do limiar na eleição M2024
+varredura-locais.zip/prioridade_locais_2026_T2.csv;real_local_M2024;float64;1,4;0.0;Acima do limiar na eleição local_M2024
+varredura-locais.zip/prioridade_locais_2026_T2.csv;realA_M2024;float64;1,4;0.0;Acima do limiar favor A na eleição M2024
+varredura-locais.zip/prioridade_locais_2026_T2.csv;realB_M2024;float64;1,4;0.0;Acima do limiar favor B na eleição M2024
+varredura-locais.zip/prioridade_locais_2026_T2.csv;tardios_M2024;float64;1,4;9.0;Votos após 17h na eleição M2024
+varredura-locais.zip/prioridade_locais_2026_T2.csv;manuais17_M2024;float64;1,4;2.0;Manuais após 17h na eleição M2024
+varredura-locais.zip/prioridade_locais_2026_T2.csv;excessoA_M2024;float64;1,4;0.0;
+varredura-locais.zip/prioridade_locais_2026_T2.csv;vencdif_M2024;float64;1,4;1.0;
+varredura-locais.zip/prioridade_locais_2026_T2.csv;inteiro_M2024;object;1,4;False;Local inteiro na eleição M2024
+varredura-locais.zip/prioridade_locais_2026_T2.csv;dif_local_mun_M2024;float64;1,4;4.962;diff_a na eleição local_mun_M2024
+varredura-locais.zip/prioridade_locais_2026_T2.csv;z_local_mun_M2024;float64;2,5;1.773;z na eleição local_mun_M2024
+varredura-locais.zip/prioridade_locais_2026_T2.csv;A_local_M2024;float64;1,4;56.668;% do lado A na eleição local_M2024
+varredura-locais.zip/prioridade_locais_2026_T2.csv;secoes_M2024b;float64;92,8;17.0;Seções na eleição M2024b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;comp_M2024b;float64;92,8;0.0;Seções com comportamento na eleição M2024b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;tardio_M2024b;float64;92,8;0.0;
+varredura-locais.zip/prioridade_locais_2026_T2.csv;manual_M2024b;float64;92,8;0.0;
+varredura-locais.zip/prioridade_locais_2026_T2.csv;real_M2024b;float64;92,8;0.0;Acima do limiar na eleição M2024b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;real_local_M2024b;float64;92,8;0.0;Acima do limiar na eleição local_M2024b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;realA_M2024b;float64;92,8;0.0;Acima do limiar favor A na eleição M2024b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;realB_M2024b;float64;92,8;0.0;Acima do limiar favor B na eleição M2024b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;tardios_M2024b;float64;92,8;0.0;Votos após 17h na eleição M2024b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;manuais17_M2024b;float64;92,8;0.0;Manuais após 17h na eleição M2024b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;excessoA_M2024b;float64;92,8;0.0;
+varredura-locais.zip/prioridade_locais_2026_T2.csv;vencdif_M2024b;float64;92,8;0.0;
+varredura-locais.zip/prioridade_locais_2026_T2.csv;inteiro_M2024b;object;92,8;False;Local inteiro na eleição M2024b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;dif_local_mun_M2024b;float64;92,8;-1.268;diff_a na eleição local_mun_M2024b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;z_local_mun_M2024b;float64;92,8;-0.902;z na eleição local_mun_M2024b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;A_local_M2024b;float64;92,8;49.684;% do lado A na eleição local_M2024b
+varredura-locais.zip/prioridade_locais_2026_T2.csv;secoes_P2026;float64;0,0;9.0;Seções na eleição P2026
+varredura-locais.zip/prioridade_locais_2026_T2.csv;comp_P2026;float64;0,0;9.0;Seções com comportamento na eleição P2026
+varredura-locais.zip/prioridade_locais_2026_T2.csv;tardio_P2026;float64;0,0;9.0;
+varredura-locais.zip/prioridade_locais_2026_T2.csv;manual_P2026;float64;0,0;1.0;
+varredura-locais.zip/prioridade_locais_2026_T2.csv;real_P2026;float64;0,0;5.0;Acima do limiar na eleição P2026
+varredura-locais.zip/prioridade_locais_2026_T2.csv;real_local_P2026;float64;0,0;0.0;Acima do limiar na eleição local_P2026
+varredura-locais.zip/prioridade_locais_2026_T2.csv;realA_P2026;float64;0,0;0.0;Acima do limiar favor A na eleição P2026
+varredura-locais.zip/prioridade_locais_2026_T2.csv;realB_P2026;float64;0,0;5.0;Acima do limiar favor B na eleição P2026
+varredura-locais.zip/prioridade_locais_2026_T2.csv;tardios_P2026;float64;0,0;539.0;Votos após 17h na eleição P2026
+varredura-locais.zip/prioridade_locais_2026_T2.csv;manuais17_P2026;float64;0,0;48.0;Manuais após 17h na eleição P2026
+varredura-locais.zip/prioridade_locais_2026_T2.csv;excessoA_P2026;float64;0,0;-108.272;
+varredura-locais.zip/prioridade_locais_2026_T2.csv;vencdif_P2026;float64;0,0;0.0;
+varredura-locais.zip/prioridade_locais_2026_T2.csv;inteiro_P2026;bool;0,0;True;Local inteiro na eleição P2026
+varredura-locais.zip/prioridade_locais_2026_T2.csv;dif_local_mun_P2026;float64;0,0;-6.076;diff_a na eleição local_mun_P2026
+varredura-locais.zip/prioridade_locais_2026_T2.csv;z_local_mun_P2026;float64;0,0;-9.279;z na eleição local_mun_P2026
+varredura-locais.zip/prioridade_locais_2026_T2.csv;A_local_P2026;float64;0,0;81.36;% do lado A na eleição local_P2026
+varredura-locais.zip/prioridade_locais_2026_T2.csv;pts_recorrencia;int64;0,0;19;Pontos do componente recorrencia
+varredura-locais.zip/prioridade_locais_2026_T2.csv;pts_desvio_real_pres;int64;0,0;25;Pontos do componente desvio_real_pres
+varredura-locais.zip/prioridade_locais_2026_T2.csv;pts_direcao_unica;int64;0,0;8;Pontos do componente direcao_unica
+varredura-locais.zip/prioridade_locais_2026_T2.csv;pts_comportamento_2026_comp;int64;0,0;12;Pontos do componente comportamento_2026_comp
+varredura-locais.zip/prioridade_locais_2026_T2.csv;pts_comportamento_2026_real;int64;0,0;9;Pontos do componente comportamento_2026_real
+varredura-locais.zip/prioridade_locais_2026_T2.csv;pts_local_inteiro;int64;0,0;8;Pontos do componente local_inteiro
+varredura-locais.zip/prioridade_locais_2026_T2.csv;pts_volume;int64;0,0;12;Pontos do componente volume
+varredura-locais.zip/prioridade_locais_2026_T2.csv;pts_desvio_2plus_pres;int64;0,0;5;Pontos do componente desvio_2plus_pres
+varredura-locais.zip/prioridade_locais_2026_T2.csv;pts_comportamento_2026;int64;0,0;21;Pontos do componente comportamento_2026
+varredura-locais.zip/prioridade_locais_2026_T2.csv;pts_so_presidenciais;int64;0,0;5;Pontos do componente so_presidenciais
+varredura-locais.zip/prioridade_locais_2026_T2.csv;prioridade;str;0,0;alta;Igual a prioridade_observacao.
+varredura-locais.zip/zonas.csv;uf;str;0,0;BA;Sigla da UF.
+varredura-locais.zip/zonas.csv;municipality;int64;0,0;36854;Código TSE do município (não é IBGE).
+varredura-locais.zip/zonas.csv;municipality_name;str;0,0;LAURO DE FREITAS;Nome do município (TSE).
+varredura-locais.zip/zonas.csv;zone;int64;0,0;180;Zona eleitoral.
+varredura-locais.zip/zonas.csv;locais_com_comportamento;int64;0,0;41;
+varredura-locais.zip/zonas.csv;locais_prioridade_alta;int64;0,0;9;
+varredura-locais.zip/zonas.csv;locais_prioridade_media;int64;0,0;14;
+varredura-locais.zip/zonas.csv;pontos_max;int64;0,0;72;
+varredura-locais.zip/zonas.csv;pontos_medio;float64;0,0;27.366;
+varredura-locais.zip/zonas.csv;secoes_com_comportamento;int64;0,0;247;Seções do local com comportamento em alguma eleição.
+varredura-locais.zip/zonas.csv;recorrentes_2plus;int64;0,0;127;Seções com comportamento em 2+ eleições.
+varredura-locais.zip/zonas.csv;secoes_dif_real_pres;int64;0,0;5;Seções com comportamento e diferença acima do limiar em alguma presidencial.
+varredura-locais.zip/zonas.csv;secoes_dif_real_pres_local;int64;0,0;5;Idem, só no nível local.
+varredura-locais.zip/zonas.csv;favor_A;int64;0,0;3;Diferenças acima do limiar a favor de A (presidenciais).
+varredura-locais.zip/zonas.csv;favor_B;int64;0,0;2;Idem a favor de B.
+varredura-locais.zip/zonas.csv;votos_tardios;int64;0,0;24408;
+varredura-locais.zip/zonas.csv;manuais_apos_17h;int64;0,0;2196;
+varredura-locais.zip/zonas.csv;secoes_comportamento_2026;int64;0,0;168;Seções na eleição comportamento_2026
+varredura-locais.zip/zonas.csv;locais_risco_alta;int64;0,0;9;
+varredura-locais.zip/zonas.csv;locais_risco_media;int64;0,0;14;
+varredura-locais.zip/zonas.csv;nivel;str;0,0;zona;Nível de comparação.
+varredura-locais.zip/cidades.csv;uf;str;0,0;RJ;Sigla da UF.
+varredura-locais.zip/cidades.csv;municipality;int64;0,0;60011;Código TSE do município (não é IBGE).
+varredura-locais.zip/cidades.csv;municipality_name;str;0,0;RIO DE JANEIRO;Nome do município (TSE).
+varredura-locais.zip/cidades.csv;locais_com_comportamento;int64;0,0;888;
+varredura-locais.zip/cidades.csv;locais_prioridade_alta;int64;0,0;42;
+varredura-locais.zip/cidades.csv;locais_prioridade_media;int64;0,0;154;
+varredura-locais.zip/cidades.csv;pontos_max;int64;0,0;94;
+varredura-locais.zip/cidades.csv;pontos_medio;float64;0,0;14.354;
+varredura-locais.zip/cidades.csv;secoes_com_comportamento;int64;0,0;3922;Seções do local com comportamento em alguma eleição.
+varredura-locais.zip/cidades.csv;recorrentes_2plus;int64;0,0;1237;Seções com comportamento em 2+ eleições.
+varredura-locais.zip/cidades.csv;secoes_dif_real_pres;int64;0,0;169;Seções com comportamento e diferença acima do limiar em alguma presidencial.
+varredura-locais.zip/cidades.csv;secoes_dif_real_pres_local;int64;0,0;94;Idem, só no nível local.
+varredura-locais.zip/cidades.csv;favor_A;int64;0,0;115;Diferenças acima do limiar a favor de A (presidenciais).
+varredura-locais.zip/cidades.csv;favor_B;int64;0,0;57;Idem a favor de B.
+varredura-locais.zip/cidades.csv;votos_tardios;int64;0,0;239899;
+varredura-locais.zip/cidades.csv;manuais_apos_17h;int64;0,0;10383;
+varredura-locais.zip/cidades.csv;secoes_comportamento_2026;int64;0,0;2471;Seções na eleição comportamento_2026
+varredura-locais.zip/cidades.csv;locais_risco_alta;int64;0,0;42;
+varredura-locais.zip/cidades.csv;locais_risco_media;int64;0,0;154;
+varredura-locais.zip/cidades.csv;nivel;str;0,0;cidade;Nível de comparação.
+varredura-locais.zip/secoes_historico.csv;municipality;int64;0,0;4006;Código TSE do município (não é IBGE).
+varredura-locais.zip/secoes_historico.csv;zone;int64;0,0;103;Zona eleitoral.
+varredura-locais.zip/secoes_historico.csv;section;int64;0,0;102;Número da seção.
+varredura-locais.zip/secoes_historico.csv;uf;str;0,0;PA;Sigla da UF.
+varredura-locais.zip/secoes_historico.csv;municipality_name;str;0,0;GOIANÉSIA DO PARÁ;Nome do município (TSE).
+varredura-locais.zip/secoes_historico.csv;voting_place;int64;0,0;1015;Código do local de votação (único dentro do município).
+varredura-locais.zip/secoes_historico.csv;place_name;str;1,9;EEEFM ANUNCIADA CHAVES;"Nome do local de votação (perfil do eleitorado 2022; vazio quando não cadastrado)."
+varredura-locais.zip/secoes_historico.csv;n_eleicoes_comportamento;int64;0,0;1;Nº de eleições (de 5) com comportamento.
+varredura-locais.zip/secoes_historico.csv;n_pres_comportamento;int64;0,0;1;
+varredura-locais.zip/secoes_historico.csv;n_pref_comportamento;int64;0,0;0;
+varredura-locais.zip/secoes_historico.csv;n_pres_dif_real;int64;0,0;0;
+varredura-locais.zip/secoes_historico.csv;n_pres_dif_real_local;int64;0,0;0;
+varredura-locais.zip/secoes_historico.csv;n_pref_dif_real;int64;0,0;0;
+varredura-locais.zip/secoes_historico.csv;n_pres_favor_A;int64;0,0;0;
+varredura-locais.zip/secoes_historico.csv;n_pres_favor_B;int64;0,0;0;
+varredura-locais.zip/secoes_historico.csv;n_pref_favor_lider;int64;0,0;0;
+varredura-locais.zip/secoes_historico.csv;n_pref_favor_segundo;int64;0,0;0;
+varredura-locais.zip/secoes_historico.csv;direcao;str;95,4;sempre A;Direção das diferenças nas presidenciais: sempre A / sempre B / mista.
+varredura-locais.zip/secoes_historico.csv;padrao_comportamento;str;0,0;só presidenciais;Em que tipo de eleição o comportamento aparece.
+varredura-locais.zip/secoes_historico.csv;padrao_desvio_resultado;str;0,0;sem desvio acima do limiar;Em que tipo de eleição a diferença acima do limiar aparece.
+varredura-locais.zip/secoes_historico.csv;dif_media_pres_com_comportamento;float64;4,4;-9.835;diff_a na eleição media_pres_com_comportamento
+varredura-locais.zip/secoes_historico.csv;votos_tardios_total;float64;0,0;79.0;Soma de votos após 17h das seções com comportamento, todas as eleições.
+varredura-locais.zip/secoes_historico.csv;manuais_apos_17h_total;float64;0,0;2.0;Soma de manuais após 17h.
+varredura-locais.zip/secoes_historico.csv;BEH_P2022;object;3,3;False;Comportamento na eleição P2022
+varredura-locais.zip/secoes_historico.csv;LATE_P2022;object;3,3;False;TARDIO na eleição P2022
+varredura-locais.zip/secoes_historico.csv;MANUAL_P2022;object;3,3;False;MANUAL na eleição P2022
+varredura-locais.zip/secoes_historico.csv;dif_P2022;float64;3,3;-1.364;diff_a na eleição P2022
+varredura-locais.zip/secoes_historico.csv;z_P2022;float64;3,4;-0.254;z na eleição P2022
+varredura-locais.zip/secoes_historico.csv;real_P2022;object;3,3;False;Acima do limiar na eleição P2022
+varredura-locais.zip/secoes_historico.csv;dir_P2022;str;96,3;A;Lado favorecido na eleição P2022
+varredura-locais.zip/secoes_historico.csv;big_P2022;object;3,3;False;|dif|≥10 na eleição P2022
+varredura-locais.zip/secoes_historico.csv;dif_comp_P2022;float64;3,3;-0.763;diff_a na eleição comp_P2022
+varredura-locais.zip/secoes_historico.csv;tardios_P2022;float64;3,3;2.0;Votos após 17h na eleição P2022
+varredura-locais.zip/secoes_historico.csv;manuais17_P2022;float64;3,3;0.0;Manuais após 17h na eleição P2022
+varredura-locais.zip/secoes_historico.csv;venc_P2022;str;3,3;A;Vencedor na seção na eleição P2022
+varredura-locais.zip/secoes_historico.csv;venc_cmp_P2022;str;3,3;A;Vencedor nos pares na eleição P2022
+varredura-locais.zip/secoes_historico.csv;cmp_P2022;str;3,3;local;Nível de comparação na eleição P2022
+varredura-locais.zip/secoes_historico.csv;A_P2022;float64;3,3;48.993;% do lado A na eleição P2022
+varredura-locais.zip/secoes_historico.csv;BEH_P2022b;object;3,3;False;Comportamento na eleição P2022b
+varredura-locais.zip/secoes_historico.csv;LATE_P2022b;object;3,3;False;TARDIO na eleição P2022b
+varredura-locais.zip/secoes_historico.csv;MANUAL_P2022b;object;3,3;False;MANUAL na eleição P2022b
+varredura-locais.zip/secoes_historico.csv;dif_P2022b;float64;3,3;1.3;diff_a na eleição P2022b
+varredura-locais.zip/secoes_historico.csv;z_P2022b;float64;3,3;0.238;z na eleição P2022b
+varredura-locais.zip/secoes_historico.csv;real_P2022b;object;3,3;False;Acima do limiar na eleição P2022b
+varredura-locais.zip/secoes_historico.csv;dir_P2022b;str;96,8;A;Lado favorecido na eleição P2022b
+varredura-locais.zip/secoes_historico.csv;big_P2022b;object;3,3;False;|dif|≥10 na eleição P2022b
+varredura-locais.zip/secoes_historico.csv;dif_comp_P2022b;float64;3,3;-4.398;diff_a na eleição comp_P2022b
+varredura-locais.zip/secoes_historico.csv;tardios_P2022b;float64;3,3;0.0;Votos após 17h na eleição P2022b
+varredura-locais.zip/secoes_historico.csv;manuais17_P2022b;float64;3,3;0.0;Manuais após 17h na eleição P2022b
+varredura-locais.zip/secoes_historico.csv;venc_P2022b;str;3,3;A;Vencedor na seção na eleição P2022b
+varredura-locais.zip/secoes_historico.csv;venc_cmp_P2022b;str;3,3;B;Vencedor nos pares na eleição P2022b
+varredura-locais.zip/secoes_historico.csv;cmp_P2022b;str;3,3;local;Nível de comparação na eleição P2022b
+varredura-locais.zip/secoes_historico.csv;A_P2022b;float64;3,3;50.725;% do lado A na eleição P2022b
+varredura-locais.zip/secoes_historico.csv;BEH_M2024;object;2,8;False;Comportamento na eleição M2024
+varredura-locais.zip/secoes_historico.csv;LATE_M2024;object;2,8;False;TARDIO na eleição M2024
+varredura-locais.zip/secoes_historico.csv;MANUAL_M2024;object;2,8;False;MANUAL na eleição M2024
+varredura-locais.zip/secoes_historico.csv;dif_M2024;float64;2,8;-0.293;diff_a na eleição M2024
+varredura-locais.zip/secoes_historico.csv;z_M2024;float64;2,8;-0.063;z na eleição M2024
+varredura-locais.zip/secoes_historico.csv;real_M2024;object;2,8;False;Acima do limiar na eleição M2024
+varredura-locais.zip/secoes_historico.csv;dir_M2024;str;97,1;B;Lado favorecido na eleição M2024
+varredura-locais.zip/secoes_historico.csv;big_M2024;object;2,8;False;|dif|≥10 na eleição M2024
+varredura-locais.zip/secoes_historico.csv;dif_comp_M2024;float64;2,8;2.584;diff_a na eleição comp_M2024
+varredura-locais.zip/secoes_historico.csv;tardios_M2024;float64;2,8;0.0;Votos após 17h na eleição M2024
+varredura-locais.zip/secoes_historico.csv;manuais17_M2024;float64;2,8;0.0;Manuais após 17h na eleição M2024
+varredura-locais.zip/secoes_historico.csv;venc_M2024;str;2,8;A;Vencedor na seção na eleição M2024
+varredura-locais.zip/secoes_historico.csv;venc_cmp_M2024;str;2,8;A;Vencedor nos pares na eleição M2024
+varredura-locais.zip/secoes_historico.csv;cmp_M2024;str;2,8;local;Nível de comparação na eleição M2024
+varredura-locais.zip/secoes_historico.csv;A_M2024;float64;2,8;45.619;% do lado A na eleição M2024
+varredura-locais.zip/secoes_historico.csv;BEH_M2024b;object;89,3;False;Comportamento na eleição M2024b
+varredura-locais.zip/secoes_historico.csv;LATE_M2024b;object;89,3;False;TARDIO na eleição M2024b
+varredura-locais.zip/secoes_historico.csv;MANUAL_M2024b;object;89,3;False;MANUAL na eleição M2024b
+varredura-locais.zip/secoes_historico.csv;dif_M2024b;float64;89,3;-0.762;diff_a na eleição M2024b
+varredura-locais.zip/secoes_historico.csv;z_M2024b;float64;89,3;-0.114;z na eleição M2024b
+varredura-locais.zip/secoes_historico.csv;real_M2024b;object;89,3;False;Acima do limiar na eleição M2024b
+varredura-locais.zip/secoes_historico.csv;dir_M2024b;str;99,8;B;Lado favorecido na eleição M2024b
+varredura-locais.zip/secoes_historico.csv;big_M2024b;object;89,3;False;|dif|≥10 na eleição M2024b
+varredura-locais.zip/secoes_historico.csv;dif_comp_M2024b;float64;89,3;3.311;diff_a na eleição comp_M2024b
+varredura-locais.zip/secoes_historico.csv;tardios_M2024b;float64;89,3;0.0;Votos após 17h na eleição M2024b
+varredura-locais.zip/secoes_historico.csv;manuais17_M2024b;float64;89,3;0.0;Manuais após 17h na eleição M2024b
+varredura-locais.zip/secoes_historico.csv;venc_M2024b;str;89,3;A;Vencedor na seção na eleição M2024b
+varredura-locais.zip/secoes_historico.csv;venc_cmp_M2024b;str;89,3;A;Vencedor nos pares na eleição M2024b
+varredura-locais.zip/secoes_historico.csv;cmp_M2024b;str;89,3;local (poucos pares);Nível de comparação na eleição M2024b
+varredura-locais.zip/secoes_historico.csv;A_M2024b;float64;89,3;54.74;% do lado A na eleição M2024b
+varredura-locais.zip/secoes_historico.csv;BEH_P2026;object;1,6;True;Comportamento na eleição P2026
+varredura-locais.zip/secoes_historico.csv;LATE_P2026;object;1,6;True;TARDIO na eleição P2026
+varredura-locais.zip/secoes_historico.csv;MANUAL_P2026;object;1,6;False;MANUAL na eleição P2026
+varredura-locais.zip/secoes_historico.csv;dif_P2026;float64;1,6;-9.835;diff_a na eleição P2026
+varredura-locais.zip/secoes_historico.csv;z_P2026;float64;1,7;-1.096;z na eleição P2026
+varredura-locais.zip/secoes_historico.csv;real_P2026;object;1,6;False;Acima do limiar na eleição P2026
+varredura-locais.zip/secoes_historico.csv;dir_P2026;str;96,2;A;Lado favorecido na eleição P2026
+varredura-locais.zip/secoes_historico.csv;big_P2026;object;1,6;False;|dif|≥10 na eleição P2026
+varredura-locais.zip/secoes_historico.csv;dif_comp_P2026;float64;1,6;-2.19;diff_a na eleição comp_P2026
+varredura-locais.zip/secoes_historico.csv;tardios_P2026;float64;1,6;77.0;Votos após 17h na eleição P2026
+varredura-locais.zip/secoes_historico.csv;manuais17_P2026;float64;1,6;2.0;Manuais após 17h na eleição P2026
+varredura-locais.zip/secoes_historico.csv;venc_P2026;str;1,6;B;Vencedor na seção na eleição P2026
+varredura-locais.zip/secoes_historico.csv;venc_cmp_P2026;str;1,6;A;Vencedor nos pares na eleição P2026
+varredura-locais.zip/secoes_historico.csv;cmp_P2026;str;1,6;município;Nível de comparação na eleição P2026
+varredura-locais.zip/secoes_historico.csv;A_P2026;float64;1,6;39.024;% do lado A na eleição P2026
+varredura-locais.zip/secoes_historico.csv;n_dif_real_favor_A;int64;0,0;0;
+varredura-locais.zip/secoes_historico.csv;n_dif_real_favor_B;int64;0,0;0;
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;eid;str;0,0;P2022;Identificador da eleição: P2022, P2022b, M2024, M2024b, P2026.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;uf;str;0,0;BA;Sigla da UF.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;municipality;int64;0,0;30007;Código TSE do município (não é IBGE).
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;zone;int64;0,0;205;Zona eleitoral.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;section;int64;0,0;1;Número da seção.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;municipality_name;str;0,0;LUÍS EDUARDO MAGALHÃES;Nome do município (TSE).
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;voting_place;int64;0,0;1015;Código do local de votação (único dentro do município).
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;place_name;str;1,5;ESCOLA MUNICIPAL SAO PAULO;"Nome do local de votação (perfil do eleitorado 2022; vazio quando não cadastrado)."
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;eligible;int64;0,0;382;Eleitores aptos na seção (BU).
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;attendance;int64;0,0;307;Comparecimento (BU).
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;valid_votes;float64;0,0;302.0;Votos válidos nominais da disputa (BU).
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;LATE;bool;0,0;True;Comportamento TARDIO = f_late ou f_last19 ou f_close.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;MANUAL;bool;0,0;False;Comportamento MANUAL = f_manual ou f_manual_late.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;f_late;bool;0,0;False;Indicador: votos após 17h > P99 do estado e ≥20.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;f_last19;bool;0,0;True;Indicador: último voto ≥19h.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;f_close;bool;0,0;True;Indicador: encerramento >60 min após 17h sem troca.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;f_manual;bool;0,0;False;Indicador: resíduo manual > P99.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;f_manual_late;bool;0,0;False;Indicador: ≥10 manuais após 17h.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;after_17_recorded;float64;0,0;67.0;Votos computados após 17h (relógio da urna).
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;after_17_manual_sequence;float64;0,0;8.0;Votos com sequência manual após 17h.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;manual_sequence_votes;float64;0,0;54.0;Votos com sequência completa de habilitação manual no log.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;manual_resid;float64;1,5;0.068;Resíduo da habilitação manual frente ao esperado (regressão por UF).
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;last_vote;str;0,0;19:07:49;Horário do último voto computado.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;close_min;float64;0,0;132.683;
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;swap;bool;0,0;False;Troca de urna (CEFT: urna esperada ≠ efetivada).
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;contingency;bool;0,0;False;Log de urna de contingência/recarregada (identidade pelo nome do arquivo).
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;cand_a;str;0,0;PT;Definição do lado A nesta eleição.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;share_a;float64;0,0;25.828;% do lado A nos votos válidos.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;cand_b;str;0,0;PL;Definição do lado B.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;share_b;float64;0,0;69.205;% do lado B nos votos válidos.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;cmp_level;str;0,0;município;Nível de comparação: local (≥3 pares), local (poucos pares), município.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;origem_municipio;str;72,1;prédio sem par comum;No nível município: seção única ou prédio sem par comum.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;cmp_n;float64;0,0;161.0;Número de pares usados.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;cmp_a;float64;0,1;39.341;% do lado A nos pares (ponderado).
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;cmp_b;float64;0,1;56.085;% do lado B nos pares.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;diff_a;float64;0,1;-13.513;share_a − cmp_a (p.p.).
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;z_a;float64;0,1;-0.841;diff_a ÷ raiz(variância dos pares + erro binomial).
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;real;bool;0,0;False;Diferença acima do limiar (|diff_a|≥5 e |z|≥2). Nome herdado.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;dir;str;95,7;A;Lado favorecido quando real: A ou B.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;big;bool;0,0;True;|diff_a| ≥ 10 p.p.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;excesso_alem_tardios;bool;0,0;False;Excesso de votos A maior do que todos os votos após 17h poderiam explicar.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;diff_turnout;float64;0,1;1.07;Comparecimento − comparecimento dos pares (p.p.).
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;winner_ab;str;0,0;B;Lado vencedor na seção.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;cmp_winner;str;0,0;B;Lado vencedor nos pares.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;excess_a_votes;float64;0,1;-40.81;diff_a/100 × votos válidos (ordem de grandeza).
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;local_inteiro;bool;0,0;True;≥50% das seções do local com comportamento.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;diff_local_mun;float64;0,1;-10.701;% A do local inteiro − % A das seções comuns do município.
+varredura-locais.zip/secoes_com_comportamento_por_eleicao.csv;z_local_mun;float64;0,2;-0.954;z da diferença do local inteiro frente ao município.
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;uf;str;0,0;BA;Sigla da UF.
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;cod_municipio;int64;0,0;38490;
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;municipio;str;0,0;SALVADOR;
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;zona;int64;0,0;3;
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;cod_local;int64;0,0;1619;
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;local;str;20,6;COLÉGIO ESTADUAL DOIS DE JULHO;
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;prioridade_observacao;str;0,0;média;"alta ≥45; média 25–44; baixa <25. Ordem de observação, não probabilidade."
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;pontos;int64;0,0;35;Pontuação transparente 0–100 do local.
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;pts_operacional;int64;0,0;27;Pontos operacionais (recorrência, volume, comportamento 2026, local inteiro sem desvio).
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;pts_resultado;int64;0,0;8;Pontos de resultado (desvios acima do limiar, direção, local inteiro com |z|≥2).
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;sinal_resultado;str;0,0;só local (vs município);nenhum / só local (vs município) / seções / seções + local.
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;secoes_no_local;int64;0,0;16;Seções na eleição no_local
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;secoes_a_checar_n;int64;0,0;9;Seções na eleição a_checar_n
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;secoes_a_checar;str;0,0;505, 511, 512, 513, 514, 515, 517, 518, ;Seções com comportamento em 2026 T1 ou recorrentes.
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;secoes_comp_2026;int64;0,0;9;Seções na eleição comp_2026
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;secoes_dif_real_2026;int64;0,0;0;Seções na eleição dif_real_2026
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;tardios_2026;int64;0,0;431;Votos após 17h na eleição 2026
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;manuais17_2026;int64;0,0;13;Manuais após 17h na eleição 2026
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;ultimo_voto_mais_tarde_2026;str;0,1;18:39:00;
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;local_inteiro_2026;bool;0,0;True;Nível local: inteiro_2026
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;recorrentes_2plus;int64;0,0;2;Seções com comportamento em 2+ eleições.
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;secoes_dif_real_pres;int64;0,0;0;Seções com comportamento e diferença acima do limiar em alguma presidencial.
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;secoes_dif_real_pres_local;int64;0,0;0;Idem, só no nível local.
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;direcao;str;69,8;sempre A;Direção das diferenças nas presidenciais: sempre A / sempre B / mista.
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;votos_tardios_total;int64;0,0;787;Soma de votos após 17h das seções com comportamento, todas as eleições.
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;manuais_apos_17h_total;int64;0,0;25;Soma de manuais após 17h.
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;pts_recorrencia;int64;0,0;6;Pontos do componente recorrencia
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;pts_desvio_real_pres;int64;0,0;0;Pontos do componente desvio_real_pres
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;pts_direcao_unica;int64;0,0;0;Pontos do componente direcao_unica
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;pts_comportamento_2026;int64;0,0;12;Pontos do componente comportamento_2026
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;pts_local_inteiro;int64;0,0;8;Pontos do componente local_inteiro
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;pts_volume;int64;0,0;9;Pontos do componente volume
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;pts_so_presidenciais;int64;0,0;0;Pontos do componente so_presidenciais
+mapa-fiscalizacao-2026-t2.zip/locais_todos.csv;nivel_risco;str;0,0;média;Nome anterior de prioridade_observacao.
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;uf;str;0,0;BA;Sigla da UF.
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;cod_municipio;int64;0,0;38490;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;municipio;str;0,0;SALVADOR;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;zona;int64;0,0;3;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;cod_local;int64;0,0;1619;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;local;str;2,6;COLÉGIO ESTADUAL DOIS DE JULHO;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;prioridade_local;str;0,0;média;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;pontos_local;int64;0,0;35;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;secao;int64;0,0;505;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;comportamento_2026_T1;str;0,0;tardia;tardia / manual / tardia+manual / não (recorrente).
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;tardios_26;int64;0,0;47;Votos após 17h na eleição 26
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;manuais17_26;int64;0,0;4;Manuais após 17h na eleição 26
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;ultimo_voto_26;str;1,0;18:05:22;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;encerramento_min_apos_17h_26;float64;1,0;69.1;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;troca_urna_26;object;1,0;False;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;contingencia_26;object;1,0;False;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;dif_2026_T1_pp;float64;0,1;6.074;diff_a na eleição 2026_T1_pp
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;dif_real_2026_T1;str;93,8;A (vs município);diff_a na eleição real_2026_T1
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;lado_A_2026_T1_pct;float64;0,0;76.238;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;venc_secao_vs_vizinhas_2026;str;0,0;A vs A;Vencedor na seção na eleição secao_vs_vizinhas_2026
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;comparacao_26;str;1,0;local;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;pares_26;float64;1,0;7.0;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;n_eleicoes_comportamento;int64;0,0;1;Nº de eleições (de 5) com comportamento.
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;n_pres_dif_real;int64;0,0;0;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;direcao_secao;str;91,9;sempre A;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;padrao_comportamento;str;0,0;só presidenciais;Em que tipo de eleição o comportamento aparece.
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;padrao_desvio_resultado;str;0,0;sem desvio acima do limiar;Em que tipo de eleição a diferença acima do limiar aparece.
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;votos_tardios_total;float64;0,0;89.0;Soma de votos após 17h das seções com comportamento, todas as eleições.
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;manuais_apos_17h_total;float64;0,0;5.0;Soma de manuais após 17h.
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;motivos;str;0,0;tardia: 2026 T1;Resumo textual dos sinais da seção.
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;o_que_observar;str;0,0;"fila e votação após 17h; horário do últi";Orientação ao fiscal.
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;nivel_local;str;0,0;média;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;fiscal_responsavel;float64;100,0;;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;hora_chegada;float64;100,0;;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;"fila_as_17h (sim/não; nº pessoas)";float64;100,0;;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;habilitacoes_manuais_observadas (nº);float64;100,0;;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;hora_ultimo_voto;float64;100,0;;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;hora_encerramento;float64;100,0;;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;troca_de_urna (sim/não);float64;100,0;;
+mapa-fiscalizacao-2026-t2.zip/secoes_checklist_todas.csv;observacoes;float64;100,0;;
+mapa-fiscalizacao-2026-t2.zip/zonas_todas.csv;uf;str;0,0;BA;Sigla da UF.
+mapa-fiscalizacao-2026-t2.zip/zonas_todas.csv;zona;int64;0,0;180;
+mapa-fiscalizacao-2026-t2.zip/zonas_todas.csv;municipios;str;0,0;LAURO DE FREITAS;
+mapa-fiscalizacao-2026-t2.zip/zonas_todas.csv;locais;int64;0,0;23;
+mapa-fiscalizacao-2026-t2.zip/zonas_todas.csv;locais_alta;int64;0,0;9;
+mapa-fiscalizacao-2026-t2.zip/zonas_todas.csv;locais_media;int64;0,0;14;
+mapa-fiscalizacao-2026-t2.zip/zonas_todas.csv;locais_com_sinal_resultado;int64;0,0;5;
+mapa-fiscalizacao-2026-t2.zip/zonas_todas.csv;secoes_a_checar;int64;0,0;151;Seções com comportamento em 2026 T1 ou recorrentes.
+mapa-fiscalizacao-2026-t2.zip/zonas_todas.csv;secoes_comp_2026;int64;0,0;146;Seções na eleição comp_2026
+mapa-fiscalizacao-2026-t2.zip/zonas_todas.csv;tardios_2026;int64;0,0;7358;Votos após 17h na eleição 2026
+mapa-fiscalizacao-2026-t2.zip/zonas_todas.csv;manuais17_2026;int64;0,0;970;Manuais após 17h na eleição 2026
+mapa-fiscalizacao-2026-t2.zip/zonas_todas.csv;pontos_max;int64;0,0;72;
+mapa-fiscalizacao-2026-t2.zip/zonas_todas.csv;fiscais_sugeridos;int64;0,0;16;1 por local de prioridade alta + 1 a cada 2 de média, arredondado para cima por zona.
+mapa-fiscalizacao-2026-t2.zip/resumo_por_uf.csv;uf;str;0,0;BA;Sigla da UF.
+mapa-fiscalizacao-2026-t2.zip/resumo_por_uf.csv;zonas;int64;0,0;168;
+mapa-fiscalizacao-2026-t2.zip/resumo_por_uf.csv;municipios;int64;0,0;267;
+mapa-fiscalizacao-2026-t2.zip/resumo_por_uf.csv;locais;int64;0,0;934;
+mapa-fiscalizacao-2026-t2.zip/resumo_por_uf.csv;locais_alta;int64;0,0;144;
+mapa-fiscalizacao-2026-t2.zip/resumo_por_uf.csv;locais_media;int64;0,0;790;
+mapa-fiscalizacao-2026-t2.zip/resumo_por_uf.csv;locais_com_sinal_resultado;int64;0,0;239;
+mapa-fiscalizacao-2026-t2.zip/resumo_por_uf.csv;secoes_a_checar;int64;0,0;4216;Seções com comportamento em 2026 T1 ou recorrentes.
+mapa-fiscalizacao-2026-t2.zip/resumo_por_uf.csv;tardios_2026;int64;0,0;231110;Votos após 17h na eleição 2026
+mapa-fiscalizacao-2026-t2.zip/resumo_por_uf.csv;manuais17_2026;int64;0,0;14947;Manuais após 17h na eleição 2026
+mapa-fiscalizacao-2026-t2.zip/resumo_por_uf.csv;fiscais_sugeridos;int64;0,0;582;1 por local de prioridade alta + 1 a cada 2 de média, arredondado para cima por zona.
+resumo_indicadores.csv;eid;str;0,0;P2022;Identificador da eleição: P2022, P2022b, M2024, M2024b, P2026.
+resumo_indicadores.csv;lab;str;0,0;Presidente 2022 T1;Rótulo da eleição.
+resumo_indicadores.csv;sections;int64;0,0;366736;
+resumo_indicadores.csv;with_log;int64;0,0;366602;
+resumo_indicadores.csv;log_complete;int64;0,0;361481;Votos no log = comparecimento do BU.
+resumo_indicadores.csv;contingency_logs;int64;0,0;8064;
+resumo_indicadores.csv;late_votes_all;int64;0,0;3293439;
+resumo_indicadores.csv;late_votes_contingency;int64;0,0;179772;
+resumo_indicadores.csv;manual_votes;int64;0,0;8390817;
+resumo_indicadores.csv;manual_late;int64;0,0;293041;
+resumo_indicadores.csv;f_late;int64;0,0;3615;Indicador: votos após 17h > P99 do estado e ≥20.
+resumo_indicadores.csv;f_manual;int64;0,0;3617;Indicador: resíduo manual > P99.
+resumo_indicadores.csv;f_manual_late;int64;0,0;5783;Indicador: ≥10 manuais após 17h.
+resumo_indicadores.csv;f_fast;int64;0,0;0;Indicador: mediana <40 s entre votos tardios (≥20).
+resumo_indicadores.csv;f_last19;int64;0,0;7510;Indicador: último voto ≥19h.
+resumo_indicadores.csv;f_turnout;int64;0,0;953;Indicador: comparecimento z>3 e ≥10 p.p. acima da mediana municipal.
+resumo_indicadores.csv;f_close;int64;0,0;35337;Indicador: encerramento >60 min após 17h sem troca.
+resumo_indicadores.csv;f_cancel;int64;0,0;3608;Indicador: cancelamentos > P99 e ≥5.
+resumo_indicadores.csv;score_0;int64;0,0;324374;
+resumo_indicadores.csv;score_1;int64;0,0;30945;
+resumo_indicadores.csv;score_2;int64;0,0;6495;
+resumo_indicadores.csv;score_3;int64;0,0;3413;
+resumo_indicadores.csv;score_4;int64;0,0;1509;
+testes_permutacao.csv;flag;str;0,0;f_late;Indicador testado.
+testes_permutacao.csv;n_flag;int64;0,0;3615;Seções sinalizadas.
+testes_permutacao.csv;n;int64;0,0;366601;Seções no grupo/nível.
+testes_permutacao.csv;raw_diff;float64;0,0;12.7623;Diferença bruta A−B (p.p.).
+testes_permutacao.csv;within_place_diff;float64;0,0;0.2727;Diferença (A−B) sinalizadas − demais, desvio da média ponderada do local (p.p.).
+testes_permutacao.csv;excess_votes_a;float64;0,0;1696.1136;Excesso de votos A nas sinalizadas (média ponderada do local).
+testes_permutacao.csv;share_a_flag;float64;0,0;55.5121;
+testes_permutacao.csv;share_a_rest;float64;0,0;48.2193;
+testes_permutacao.csv;null_sd;float64;0,0;0.0981;Desvio-padrão do nulo (embaralhamento no município).
+testes_permutacao.csv;null_mean;float64;0,0;0.0016;
+testes_permutacao.csv;null_q025;float64;0,0;-0.1998;Percentil 2,5 do nulo.
+testes_permutacao.csv;null_q975;float64;0,0;0.1811;Percentil 97,5 do nulo.
+testes_permutacao.csv;p_perm;float64;0,0;0.002;p bilateral por permutação (município).
+testes_permutacao.csv;null_sd_local;float64;0,0;0.0824;
+testes_permutacao.csv;null_mean_local;float64;0,0;-0.0008;
+testes_permutacao.csv;null_q025_local;float64;0,0;-0.1604;
+testes_permutacao.csv;null_q975_local;float64;0,0;0.1529;
+testes_permutacao.csv;p_perm_local;float64;0,0;0.004;p por permutação dentro do local.
+testes_permutacao.csv;eid;str;0,0;P2022;Identificador da eleição: P2022, P2022b, M2024, M2024b, P2026.
+testes_permutacao.csv;lab;str;0,0;Presidente 2022 T1;Rótulo da eleição.
+testes_permutacao.csv;q;float64;0,0;0.0051;q de Benjamini–Hochberg (município).
+testes_permutacao.csv;q_local;float64;0,0;0.0096;q (local).
+secoes_indicadores_<eid>.parquet;municipality;int32;0,0;30007;Código TSE do município (não é IBGE).
+secoes_indicadores_<eid>.parquet;zone;int32;0,0;205;Zona eleitoral.
+secoes_indicadores_<eid>.parquet;section;int32;0,0;1;Número da seção.
+secoes_indicadores_<eid>.parquet;municipality_name;str;0,0;LUÍS EDUARDO MAGALHÃES;Nome do município (TSE).
+secoes_indicadores_<eid>.parquet;voting_place;str;0,0;1015;Código do local de votação (único dentro do município).
+secoes_indicadores_<eid>.parquet;eligible;int64;0,0;228;Eleitores aptos na seção (BU).
+secoes_indicadores_<eid>.parquet;attendance;int64;0,0;194;Comparecimento (BU).
+secoes_indicadores_<eid>.parquet;valid_votes;float64;0,0;191.0;Votos válidos nominais da disputa (BU).
+secoes_indicadores_<eid>.parquet;manual_bu;int64;0,0;25;Eleitores habilitados manualmente segundo o campo do BU.
+secoes_indicadores_<eid>.parquet;opening_bu;str;0,0;2026-10-04 08:00:01;Abertura da urna (BU).
+secoes_indicadores_<eid>.parquet;closure_bu;str;0,0;2026-10-04 17:02:03;Encerramento da urna (BU).
+secoes_indicadores_<eid>.parquet;turnout;float64;0,0;0.8508771929824561;Comparecimento ÷ aptos.
+secoes_indicadores_<eid>.parquet;municipal_median;float64;0,0;0.7974683544303798;
+secoes_indicadores_<eid>.parquet;state_median;float64;0,0;0.8045112781954887;
+secoes_indicadores_<eid>.parquet;state_mad;float64;0,0;0.02957742385491746;
+secoes_indicadores_<eid>.parquet;winner_party;str;0,0;PL;
+secoes_indicadores_<eid>.parquet;winner_pct;float64;0,0;74.3455497382199;
+secoes_indicadores_<eid>.parquet;margin_pp;float64;0,0;52.35602094240838;
+secoes_indicadores_<eid>.parquet;member;str;0,0;o03220ba3000702050001-log.jez;
+secoes_indicadores_<eid>.parquet;identity_status;str;0,0;PARSED;
+secoes_indicadores_<eid>.parquet;vote_events;float64;0,0;194.0;Votos computados no log da urna.
+secoes_indicadores_<eid>.parquet;after_17_recorded;float64;0,0;0.0;Votos computados após 17h (relógio da urna).
+secoes_indicadores_<eid>.parquet;manual_sequence_votes;float64;0,0;25.0;Votos com sequência completa de habilitação manual no log.
+secoes_indicadores_<eid>.parquet;after_17_manual_sequence;float64;0,0;0.0;Votos com sequência manual após 17h.
+secoes_indicadores_<eid>.parquet;manual_requests;float64;0,0;28.0;Solicitações de dado pessoal para habilitação manual.
+secoes_indicadores_<eid>.parquet;cancellations;float64;0,0;2.0;Habilitações canceladas/suspensas pelo mesário.
+secoes_indicadores_<eid>.parquet;manual_unattributed_votes;float64;0,0;4.0;
+secoes_indicadores_<eid>.parquet;after_17_manual_unattributed;float64;0,0;0.0;
+secoes_indicadores_<eid>.parquet;late_interval_median_seconds;float64;43,8;86.0;Mediana dos intervalos entre votos após 17h (s).
+secoes_indicadores_<eid>.parquet;votes_1630_1700;float64;0,0;4.0;
+secoes_indicadores_<eid>.parquet;last_vote;str;0,0;16:43:57;Horário do último voto computado.
+secoes_indicadores_<eid>.parquet;first_vote;str;0,0;08:03:00;Horário do primeiro voto.
+secoes_indicadores_<eid>.parquet;clock_reversals;float64;0,0;0.0;Reversões de relógio detectadas no log.
+secoes_indicadores_<eid>.parquet;votes_a;float64;0,0;42.0;Votos do lado A (PT / líder do município).
+secoes_indicadores_<eid>.parquet;votes_b;float64;0,0;142.0;Votos do lado B (PL / 2º colocado).
+secoes_indicadores_<eid>.parquet;cand_a;str;0,0;PT;Definição do lado A nesta eleição.
+secoes_indicadores_<eid>.parquet;cand_b;str;0,0;PL;Definição do lado B.
+secoes_indicadores_<eid>.parquet;swap;bool;0,0;False;Troca de urna (CEFT: urna esperada ≠ efetivada).
+secoes_indicadores_<eid>.parquet;red;bool;0,0;False;Origem do voto RED (recuperação de dados) no CEFT.
+secoes_indicadores_<eid>.parquet;uf;str;0,0;BA;Sigla da UF.
+secoes_indicadores_<eid>.parquet;place_name;str;4,2;ESCOLA MUNICIPAL SAO PAULO;"Nome do local de votação (perfil do eleitorado 2022; vazio quando não cadastrado)."
+secoes_indicadores_<eid>.parquet;voters;float64;4,2;382.0;
+secoes_indicadores_<eid>.parquet;biometria_pct;float64;4,2;91.36125654450262;
+secoes_indicadores_<eid>.parquet;age60_pct;float64;4,2;22.25130890052356;
+secoes_indicadores_<eid>.parquet;low_school_pct;float64;4,2;40.31413612565445;
+secoes_indicadores_<eid>.parquet;eid;str;0,0;P2026;Identificador da eleição: P2022, P2022b, M2024, M2024b, P2026.
+secoes_indicadores_<eid>.parquet;lab;str;0,0;Presidente 2026 T1;Rótulo da eleição.
+secoes_indicadores_<eid>.parquet;place;str;0,0;BA|30007|205|1015;Chave do local (uf|município|zona|local).
+secoes_indicadores_<eid>.parquet;mun;str;0,0;BA|30007;Chave do município (uf|município).
+secoes_indicadores_<eid>.parquet;has_log;bool;0,0;True;Há log vinculado à seção.
+secoes_indicadores_<eid>.parquet;log_complete;bool;0,0;True;Votos no log = comparecimento do BU.
+secoes_indicadores_<eid>.parquet;contingency;bool;0,0;False;Log de urna de contingência/recarregada (identidade pelo nome do arquivo).
+secoes_indicadores_<eid>.parquet;late_share;float64;0,0;0.0;after_17_recorded ÷ vote_events.
+secoes_indicadores_<eid>.parquet;manual_share;float64;0,0;0.12886597938144329;manual_sequence_votes ÷ vote_events.
+secoes_indicadores_<eid>.parquet;cancel_rate;float64;0,0;0.010309278350515464;
+secoes_indicadores_<eid>.parquet;last_min;float64;0,0;1003.95;
+secoes_indicadores_<eid>.parquet;close_min;float64;0,0;2.0499999999999545;
+secoes_indicadores_<eid>.parquet;share_a;float64;0,0;21.98952879581152;% do lado A nos votos válidos.
+secoes_indicadores_<eid>.parquet;share_b;float64;0,0;74.3455497382199;% do lado B nos votos válidos.
+secoes_indicadores_<eid>.parquet;diff_ab;float64;0,0;-52.35602094240838;share_a − share_b (p.p.).
+secoes_indicadores_<eid>.parquet;manual_resid;float64;4,2;0.05513444804646295;Resíduo da habilitação manual frente ao esperado (regressão por UF).
+secoes_indicadores_<eid>.parquet;f_late;bool;0,0;False;Indicador: votos após 17h > P99 do estado e ≥20.
+secoes_indicadores_<eid>.parquet;f_manual;bool;0,0;False;Indicador: resíduo manual > P99.
+secoes_indicadores_<eid>.parquet;f_manual_late;bool;0,0;False;Indicador: ≥10 manuais após 17h.
+secoes_indicadores_<eid>.parquet;f_fast;bool;0,0;False;Indicador: mediana <40 s entre votos tardios (≥20).
+secoes_indicadores_<eid>.parquet;f_last19;bool;0,0;False;Indicador: último voto ≥19h.
+secoes_indicadores_<eid>.parquet;f_turnout;bool;0,0;False;Indicador: comparecimento z>3 e ≥10 p.p. acima da mediana municipal.
+secoes_indicadores_<eid>.parquet;f_close;bool;0,0;False;Indicador: encerramento >60 min após 17h sem troca.
+secoes_indicadores_<eid>.parquet;f_cancel;bool;0,0;False;Indicador: cancelamentos > P99 e ≥5.
+secoes_indicadores_<eid>.parquet;score;int64;0,0;0;Soma dos 8 indicadores.

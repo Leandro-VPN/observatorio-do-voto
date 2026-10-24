@@ -1,0 +1,45 @@
+{
+ "edicao": "2026-10-24",
+ "gerado_em": "2026-10-24T16:51:46",
+ "codigo_sha": "c7c47d0fb6431654b685a666cee7f27db46ab79a",
+ "codigo_sujo": false,
+ "script": "scripts/make_varredura_locais.py",
+ "parametros": {
+  "MIN_PP": 5.0,
+  "BIG": 10.0,
+  "ZMIN": 2.0,
+  "MIN_PEERS": 3,
+  "elegibilidade_aptos_min": 50,
+  "cortes_prioridade": {
+   "alta": 45,
+   "media": 25
+  }
+ },
+ "ufs": [
+  "BA",
+  "SP",
+  "MG",
+  "RJ",
+  "PR",
+  "RS",
+  "PE",
+  "CE",
+  "PA",
+  "SC",
+  "MA"
+ ],
+ "eleicoes": [
+  "P2022",
+  "P2022b",
+  "M2024",
+  "M2024b",
+  "P2026"
+ ],
+ "entradas": {
+  "secoes_indicadores_P2022.parquet": "3757060247baa8a3b6e86bd886d68c1a3775fbc9247f61410e15707abd2d002a",
+  "secoes_indicadores_P2022b.parquet": "5a541d2a7788f22227f5a95e6449f5d639cc214d1b601ac7c5fe421df0a26b63",
+  "secoes_indicadores_M2024.parquet": "89fdee1ff1e19b6d598d571eb1c5334fab3f648fbbf20ccfdc25970f2034306f",
+  "secoes_indicadores_M2024b.parquet": "947cb351ca63e302c2749bc903c9784e2a5cb971dea2dc4bf63eb85d96c899c7",
+  "secoes_indicadores_P2026.parquet": "3370582b63ed49180bf4999e9d63cc6385e8861d8227890fe71dd8602bac27e3"
+ }
+}
