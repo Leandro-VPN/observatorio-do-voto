@@ -32,5 +32,11 @@ document.querySelector('#copy-pix').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(key); document.querySelector('#copy-status').textContent = 'Chave Pix copiada. Confira o destinatário no aplicativo do seu banco.'; }
   catch { document.querySelector('#copy-status').textContent = 'Chave Pix: ' + key; }
 });
+const homeBtn = document.querySelector('#copy-pix-home');
+if (homeBtn) homeBtn.addEventListener('click', async () => {
+  const key = '4cc4708e-e291-4012-ab41-3c67eab901c9';
+  try { await navigator.clipboard.writeText(key); document.querySelector('#copy-status-home').textContent = 'Chave Pix copiada. Confira o destinatário no aplicativo do seu banco.'; }
+  catch { document.querySelector('#copy-status-home').textContent = 'Chave Pix: ' + key; }
+});
 document.querySelectorAll('.gallery figure').forEach(f => f.addEventListener('click', () => { const d = document.querySelector('#zoom'); d.querySelector('img').src = f.querySelector('img').src; d.querySelector('figcaption').textContent = f.querySelector('figcaption').textContent; d.showModal(); }));
 document.querySelector('#zoom .close').addEventListener('click', () => document.querySelector('#zoom').close());
