@@ -1,0 +1,17 @@
+# Escopo declarativo de eleições. A existência de um 2T não implica que todas as localidades o tenham.
+# 2026/t2 ainda é evento futuro na data de referência desta documentação (2026-10-12).
+as_of: '2026-10-12'
+allowed_offices: [PRESIDENTE, GOVERNADOR, SENADOR, PREFEITO]
+excluded_offices: [DEPUTADO_FEDERAL, DEPUTADO_ESTADUAL, DEPUTADO_DISTRITAL, VEREADOR]
+municipal:
+  2012: {offices: [PREFEITO], rounds_possible: [1, 2], phase: final, senate_seats: 0}
+  2016: {offices: [PREFEITO], rounds_possible: [1, 2], phase: final, senate_seats: 0}
+  2020: {offices: [PREFEITO], rounds_possible: [1, 2], phase: final, senate_seats: 0}
+  2024: {offices: [PREFEITO], rounds_possible: [1, 2], phase: final, senate_seats: 0}
+general:
+  2014: {offices: [PRESIDENTE, GOVERNADOR, SENADOR], rounds_possible: [1, 2], senate_rounds: [1], phase: final, senate_seats: 1}
+  2018: {offices: [PRESIDENTE, GOVERNADOR, SENADOR], rounds_possible: [1, 2], senate_rounds: [1], phase: final, senate_seats: 2}
+  2022: {offices: [PRESIDENTE, GOVERNADOR, SENADOR], rounds_possible: [1, 2], senate_rounds: [1], phase: final, senate_seats: 1}
+  2026: {offices: [PRESIDENTE, GOVERNADOR, SENADOR], rounds_possible: [1, 2], senate_rounds: [1], phase: first_round_available_second_future, senate_seats: 2}
+# A data e regra de cada turno devem vir do cadastro validado; não gerar 2T automaticamente.
+# Códigos CD_CARGO do TSE são mapeados por esquema/ano em arquivo próprio validado com dados amostrais.

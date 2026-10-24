@@ -1,0 +1,116 @@
+{
+  "version": "1.0.0",
+  "as_of": "2026-10-12",
+  "files": [
+    {
+      "path": "ARQUITETURA.mmd",
+      "sha256": "e535de1f1a276eb1a2db61b227282a72c840181706d92cde5d066ce5a40f420f",
+      "size_bytes": 639
+    },
+    {
+      "path": "DOCUMENTACAO_COMPLETA.md",
+      "sha256": "aa839e11fdb8e72a874b2170cfa81d36fa1c2af89f2e7b6f1c666c97fa797fad",
+      "size_bytes": 179913
+    },
+    {
+      "path": "INSTRUCOES_DE_ENVIO.md",
+      "sha256": "b0101b5d32f7062e89856c9b7492017824a1e08b0f8341b6aabdc45c127ba57e",
+      "size_bytes": 2347
+    },
+    {
+      "path": "PROMPT_MESTRE_CRIACAO.md",
+      "sha256": "b436a56631b7a05c9a6ce3a47930bb74fd9bf9cba38bad0df719f94fc8aabbe4",
+      "size_bytes": 17710
+    },
+    {
+      "path": "README.md",
+      "sha256": "614178f3e039cda22090c1d2a742bbd6a28a90c8fe6013a106c8875881664457",
+      "size_bytes": 5661
+    },
+    {
+      "path": "config/fontes_seed.yaml",
+      "sha256": "0249dba00821c73fee5f520bc29d6b46a8aaf947875094f5733ecbdaa12595df",
+      "size_bytes": 2787
+    },
+    {
+      "path": "config/pleitos.yaml",
+      "sha256": "e8c6a6a34412bb8bcb8f37449b01c0a609e3e79a2606ea241ce50f8e68273941",
+      "size_bytes": 1476
+    },
+    {
+      "path": "db/schema.sql",
+      "sha256": "c036d360735efbf030616e6da91a75045db548cc79842d1ed978be5ad52aec80",
+      "size_bytes": 10866
+    },
+    {
+      "path": "docs/01_PRODUTO_ESCOPO.md",
+      "sha256": "a0de16d06fd23d25ea003afbb9048509cb80f5bb87195f0bef3fe195bee29403",
+      "size_bytes": 12746
+    },
+    {
+      "path": "docs/02_FONTES_OFICIAIS_E_COBERTURA.md",
+      "sha256": "7b6ccfcaea4f50c3699dbe427ad0925df2c15d2239fc31c3ea69bf8c51fc2aff",
+      "size_bytes": 15624
+    },
+    {
+      "path": "docs/03_ARQUITETURA_TECNICA.md",
+      "sha256": "5e59c0845d942bde40640561ff806d7b9ce1f474fe229f3a93bb8dc1a185f2f7",
+      "size_bytes": 15016
+    },
+    {
+      "path": "docs/04_MODELO_DE_DADOS.md",
+      "sha256": "123472277afb0c8adc63b8c8ccc98e931ac9a4079d16eaea6ec00589451d3d2a",
+      "size_bytes": 11994
+    },
+    {
+      "path": "docs/05_LOGS_HORARIOS_BIOMETRIA.md",
+      "sha256": "ad8af238ede44a1c1b682d51e907574d2678f3c108c2ae0675acd5f21e542d78",
+      "size_bytes": 16595
+    },
+    {
+      "path": "docs/06_METODOLOGIA_ESTATISTICA.md",
+      "sha256": "0bd55196fa20490bb1e0b9a804173520536c3ab610469925b8d548206abaee43",
+      "size_bytes": 13582
+    },
+    {
+      "path": "docs/07_VALIDACAO_TESTES_SEGURANCA.md",
+      "sha256": "d42a6239245d83b7372cddfc5af2e85ea2b39ece8a1e23e9fdb4631f9c570d6b",
+      "size_bytes": 11181
+    },
+    {
+      "path": "docs/08_API_E_PAINEL.md",
+      "sha256": "a0c21aa821192e7672fe44e5845373d868f31905f37ffa3d28a30ed7c9bd5368",
+      "size_bytes": 11074
+    },
+    {
+      "path": "docs/09_ROADMAP_CRITERIOS_DE_ACEITE.md",
+      "sha256": "5698c1055d09891224eb11e7d1948a914e5a8a2791db70095ff2dc97e323e978",
+      "size_bytes": 7907
+    },
+    {
+      "path": "docs/10_REFERENCIA_ESTELEICAO.md",
+      "sha256": "f32828554a35742e9b0908c06a9c85f0f1be98d9c45262f7f3dbb8639940f09c",
+      "size_bytes": 8814
+    },
+    {
+      "path": "docs/11_GLOSSARIO_E_DECISOES.md",
+      "sha256": "a7930cd1b0eda316bae25534cc5e13e8a516d4e3f9b1deaed07e25830abb823a",
+      "size_bytes": 8279
+    },
+    {
+      "path": "scripts/inventariar_ckan.py",
+      "sha256": "d15f03a8266d425304f2e5441b33f37b492d95b105e7e190d783cbf1ca82fa9a",
+      "size_bytes": 5877
+    },
+    {
+      "path": "tests/cenarios_aceite.md",
+      "sha256": "a0f94e80be59dab423b6c1c4b0a5c1f7e0e3bda9765e9d9f8e90a8bd191669b3",
+      "size_bytes": 4998
+    },
+    {
+      "path": "tests/test_inventory_stdlib.py",
+      "sha256": "8cb0c6b533040a6dd3ff904b9da892d7d23426cd52056c149104226633491c40",
+      "size_bytes": 1537
+    }
+  ]
+}

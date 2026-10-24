@@ -1,0 +1,22 @@
+# Seeds de URLs CATALOGAIS VERIFICADAS; URLs de download efetivas devem ser descobertas pela API CKAN.
+as_of: '2026-10-12'
+ckan_api: https://dadosabertos.tse.jus.br/api/3/action
+sources:
+  - {family: result_section, year: 2012, status: catalog_page_verified, url: 'https://dadosabertos.tse.jus.br/dataset/resultados-2012'}
+  - {family: result_section, year: 2014, status: catalog_page_verified, url: 'https://dadosabertos.tse.jus.br/dataset/resultados-2014'}
+  - {family: result_section, year: 2016, status: catalog_page_verified, url: 'https://dadosabertos.tse.jus.br/dataset/resultados-2016'}
+  - {family: result_section, year: 2018, status: catalog_page_verified, url: 'https://dadosabertos.tse.jus.br/dataset/resultados-2018'}
+  - {family: result_section, year: 2020, status: catalog_page_verified, url: 'https://dadosabertos.tse.jus.br/dataset/resultados-2020'}
+  - {family: result_section, year: 2022, status: catalog_page_verified, url: 'https://dadosabertos.tse.jus.br/dataset/resultados-2022'}
+  - {family: result_section, year: 2024, status: catalog_page_verified, url: 'https://dadosabertos.tse.jus.br/dataset/resultados-2024'}
+  - {family: result_section, year: 2026, status: catalog_page_verified, url: 'https://dadosabertos.tse.jus.br/dataset/resultados-2026'}
+  - {family: bu, year: 2012, status: catalog_page_verified, url: 'https://dadosabertos.tse.jus.br/dataset/resultados-2012-boletim-de-urna'}
+  - {family: bu, year: 2016, status: catalog_page_verified, url: 'https://dadosabertos.tse.jus.br/dataset/resultados-2016-boletim-de-urna'}
+  - {family: bu, year: 2026, status: catalog_page_verified, url: 'https://dadosabertos.tse.jus.br/dataset/resultados-2026-boletim-de-urna'}
+  - {family: transmitted_archives, year: 2022, status: catalog_page_verified, url: 'https://dadosabertos.tse.jus.br/dataset/resultados-2022-arquivos-transmitidos-para-totalizacao'}
+  - {family: transmitted_archives, year: 2024, status: catalog_page_verified, url: 'https://dadosabertos.tse.jus.br/dataset/resultados-2024-arquivos-transmitidos-para-totalizacao'}
+  - {family: transmitted_archives, year: 2026, status: catalog_page_verified, url: 'https://dadosabertos.tse.jus.br/dataset/resultados-2026-arquivos-transmitidos-para-totalizacao'}
+  - {family: turnout, year: 2022, status: catalog_page_verified, url: 'https://dadosabertos.tse.jus.br/dataset/comparecimento-e-abstencao-2022'}
+  - {family: electoral_roll, year: 2022, status: catalog_page_verified, url: 'https://dadosabertos.tse.jus.br/dataset/eleitorado-2022'}
+  - {family: electoral_roll, year: 2024, status: catalog_page_verified, url: 'https://dadosabertos.tse.jus.br/dataset/eleitorado-2024'}
+  - {family: candidates, year: 2026, status: catalog_page_verified, url: 'https://dadosabertos.tse.jus.br/dataset/candidatos-2026'}

@@ -1,0 +1,15 @@
+# Escopo autorizado: apenas presidente e prefeito; regras em domain.py.
+as_of: '2026-10-13'
+allowed_offices: [PRESIDENTE, PREFEITO]
+excluded_offices: [GOVERNADOR, SENADOR, DEPUTADO_FEDERAL, DEPUTADO_ESTADUAL, DEPUTADO_DISTRITAL, VEREADOR]
+municipal:
+  2012: {offices: [PREFEITO], rounds_possible: [1, 2]}
+  2016: {offices: [PREFEITO], rounds_possible: [1, 2]}
+  2020: {offices: [PREFEITO], rounds_possible: [1, 2]}
+  2024: {offices: [PREFEITO], rounds_possible: [1, 2]}
+general:
+  2014: {offices: [PRESIDENTE], rounds_possible: [1, 2]}
+  2018: {offices: [PRESIDENTE], rounds_possible: [1, 2]}
+  2022: {offices: [PRESIDENTE], rounds_possible: [1, 2]}
+  2026: {offices: [PRESIDENTE], rounds_possible: [1, 2]}
+# Segundo turno só é carregado após a data oficial e quando há registros ordinários.

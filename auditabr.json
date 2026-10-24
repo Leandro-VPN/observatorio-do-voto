@@ -1,0 +1,11 @@
+{
+  "storage": "storage-regional",
+  "regions": [
+    "NORTE",
+    "NORDESTE"
+  ],
+  "offices": [
+    "PRESIDENTE",
+    "PREFEITO"
+  ]
+}

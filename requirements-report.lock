@@ -1,0 +1,18 @@
+# Ambiente .venv-report: usado pelos scripts/make_*.py que geram relatorios/ (PDF, XLSX, figuras).
+# Versoes reconstruidas a partir do site-packages do ambiente original (F:\votos\.venv-report, 19/10/2026).
+pandas==3.0.6
+numpy==2.5.4
+pyarrow==26.0.0
+scipy==1.18.1
+matplotlib==3.11.2
+reportlab==5.0.1
+pillow==13.0.0
+openpyxl==3.1.5
+xlsxwriter==3.2.9
+pymupdf==2.0
+pymupdf4llm==2.0
+duckdb==2.0.0
+httpx==0.28.1
+pyyaml==6.0.3
+tabulate==0.10.0
+psutil==7.2.2

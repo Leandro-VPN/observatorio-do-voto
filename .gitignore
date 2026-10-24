@@ -1,0 +1,23 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.hypothesis/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+build/
+dist/
+.venv-report/
+storage/
+storage-regional/
+demo-storage/
+*.log
+
+# Dados de pesquisa e saidas geradas (grandes; reproduziveis pelos scripts/)
+research/*
+!research/PLANO_ANALISE_A_PRIORI.md
+!research/plano-v1-registro.json
+relatorios/
+relatorios.rar
+logs_run/
+

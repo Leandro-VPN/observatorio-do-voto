@@ -1,0 +1,21 @@
+flowchart TB
+    A[Catálogo CKAN TSE] --> C[Registry versionado]
+    B[CSV TXT ZIP BU LOG] --> D[Downloader seguro]
+    C --> D
+    D --> E[RAW imutável e SHA-256]
+    E --> F[Profiler de layout]
+    F --> G[Parsers de resultados]
+    F --> H[Parsers BU]
+    F --> I[Parsers de logs por versão]
+    F --> J[Parsers eleitorado e locais]
+    G --> K[Silver Parquet]
+    H --> K
+    I --> K
+    J --> K
+    K --> L[Reconciliação e gates de QA]
+    L --> M[Gold DuckDB e Snapshots]
+    M --> N[Análise estatística versionada]
+    M --> O[API FastAPI]
+    N --> O
+    O --> P[Painel Streamlit]
+    O --> Q[Relatórios com proveniência]
