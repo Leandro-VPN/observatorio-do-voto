@@ -38,7 +38,7 @@ LAB = {'P2022': 'Pres. 2022 T1', 'P2022b': 'Pres. 2022 T2', 'M2024': 'Pref. 2024
 DAYS = {'P2022': '02/10/2022', 'P2022b': '30/10/2022', 'M2024': '06/10/2024', 'M2024b': '27/10/2024', 'P2026': '04/10/2026'}
 # paleta de referência validada (dataviz): categóricas em ordem fixa, sequencial azul, tinta/grade
 C1, C2, C3 = '#2a78d6', '#eb6834', '#1baf7a'
-SEQ = {'alta': '#184f95', 'média': '#3987e5', 'baixa': '#9ec5f4'}
+SEQ = {'alta': '#184f95', 'média': '#3987e5', 'baixa': '#86b6ef'}   # rampa ordinal azul (passos 600/400/250), validada pelo dataviz
 INK, INK2, MUTED, GRID = '#0b0b0b', '#52514e', '#898781', '#e1e0d9'
 plt.rcParams.update({'font.size': 10, 'axes.spines.top': False, 'axes.spines.right': False, 'axes.grid': True, 'grid.alpha': .6, 'grid.color': GRID, 'grid.linewidth': .6,
                      'axes.edgecolor': '#c3c2b7', 'axes.labelcolor': INK2, 'xtick.color': MUTED, 'ytick.color': MUTED, 'text.color': INK, 'figure.dpi': 150, 'axes.titlesize': 12, 'axes.titleweight': 'bold',
@@ -116,7 +116,7 @@ def charts(D):
     # 2 diferença real: com comportamento vs comuns
     f, ax = plt.subplots(figsize=(10, 4.6))
     b1 = ax.bar(x - .2, V.pct_real_com_comportamento, .38, color=C1, label='Seções com comportamento')
-    b2 = ax.bar(x + .2, V.pct_real_secoes_comuns, .38, color='#9ec5f4', label='Seções comuns (acaso)')
+    b2 = ax.bar(x + .2, V.pct_real_secoes_comuns, .38, color=C2, label='Seções comuns (acaso)')
     bar_labels(ax, b1, '{:.1f}%'); bar_labels(ax, b2, '{:.1f}%')
     ax.set_xticks(x); ax.set_xticklabels(labs); ax.set_ylabel('% de seções com diferença real frente às vizinhas'); ax.legend(loc='upper left')
     ax.set_title('As seções com comportamento votam diferente das vizinhas do mesmo prédio?')
@@ -127,7 +127,7 @@ def charts(D):
     pa = 100 * V.dif_real_favor_A / (V.dif_real_favor_A + V.dif_real_favor_B)
     pc = 100 * V.comuns_real_favor_A / (V.comuns_real_favor_A + V.comuns_real_favor_B)
     b1 = ax.bar(x - .2, pa, .38, color=C1, label='Seções com comportamento')
-    b2 = ax.bar(x + .2, pc, .38, color='#9ec5f4', label='Seções comuns')
+    b2 = ax.bar(x + .2, pc, .38, color=C2, label='Seções comuns')
     bar_labels(ax, b1, '{:.0f}%'); bar_labels(ax, b2, '{:.0f}%')
     ax.axhline(50, color=INK2, lw=.8, ls='--'); ax.text(len(V) - .5, 51, '50% = sem direção', ha='right', fontsize=8.5, color=INK2)
     ax.set_ylim(0, 100); ax.set_xticks(x); ax.set_xticklabels(labs); ax.set_ylabel('% das diferenças reais a favor do lado A'); ax.legend(loc='lower left')
@@ -457,7 +457,7 @@ def pdf_resumo(D, figs):
           Paragraph('Pasta relatorios/fiscalizacao/: <b>mapa_2026_T2/</b> (mapa e checklist por estado, PDF e Excel), <b>varredura/</b> (lista completa de prédios com a nota e os motivos), '
                     '<b>documentos/</b> (este resumo, o caderno de gráficos e o documento técnico com método e dados para quem quiser conferir).', Pp)]
     # dois gráficos de apoio
-    st += [PageBreak(), Paragraph('Dois gráficos para entender', Hh), img(figs[1][0], 17), Paragraph('Seções com fila ou liberação manual quase não votam diferente das vizinhas: a barra escura é só um pouco maior que a clara.', Pp),
+    st += [PageBreak(), Paragraph('Dois gráficos para entender', Hh), img(figs[1][0], 17), Paragraph('Seções com fila ou liberação manual quase não votam diferente das vizinhas: a barra azul é só um pouco maior que a laranja.', Pp),
            Spacer(1, 8), img(figs[2][0], 17), Paragraph('Quando votam diferente, nas eleições de presidente pendem para um lado mais do que as seções comuns; nas de prefeito, não.', Pp)]
 
     def foot(c, d_):
