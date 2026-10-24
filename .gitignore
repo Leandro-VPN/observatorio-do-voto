@@ -8,6 +8,11 @@ __pycache__/
 build/
 dist/
 .venv-report/
+# segredos locais (tokens)
+API.ENV
+api.env*
+*.env
+.env*
 storage/
 storage-regional/
 demo-storage/
