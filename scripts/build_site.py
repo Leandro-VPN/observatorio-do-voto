@@ -54,7 +54,7 @@ def esc(s):
 
 
 def main():
-    cfg = json.loads((SITE / 'site_config.json').read_text(encoding='utf-8'))
+    cfg = json.loads((SITE / 'site_config.json').read_text(encoding='utf-8-sig'))
     V = pd.read_csv(VAR / 'resumo_por_eleicao.csv', **CSV).set_index('eid')
     L = pd.read_csv(VAR / 'locais_risco.csv', low_memory=False, usecols=['uf', 'prioridade_observacao'], **CSV)
     ufs = [u for u in UF_ORDER if u in L.uf.unique()]
