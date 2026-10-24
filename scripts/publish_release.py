@@ -111,7 +111,7 @@ def main():
         body = {'tag_name': tag, 'target_commitish': 'main', 'name': f"Dados · edição {pd.Timestamp(ed['edicao']):%d/%m/%Y}" + (f' (revisão {n})' if n > 1 else ''), 'draft': True, 'prerelease': False,
                 'body': (f"Pacotes de dados da varredura de fiscalização, edição de {pd.Timestamp(ed['edicao']):%d/%m/%Y} ({len(ed.get('ufs', []))} estados), código {ed.get('codigo_sha', 'n/d')}. "
                          'CSV com separador ponto e vírgula e decimal com vírgula; parquet com uma linha por seção. manifesto-release.json traz SHA-256 de cada ativo, parâmetros e entradas. '
-                         'edicao-editorial.zip contém tudo o que scripts/build_site.py precisa para reconstruir o site (scripts/restore_edicao.py). Derivados de dados públicos do TSE. Sinalização não é acusação.')}
+                         'edicao-editorial.zip contém tudo o que scripts/build_site.py precisa para reconstruir o site (scripts/restore_edicao.py). Derivados de dados públicos do TSE; licença CC BY 4.0 (LICENSE-DADOS.md). Sinalização não é acusação.')}
         rel = call('POST', f'{API}/repos/{repo}/releases', body)
         print('release criada como rascunho:', tag, flush=True)
     else:

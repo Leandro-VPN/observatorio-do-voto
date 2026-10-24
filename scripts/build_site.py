@@ -338,7 +338,7 @@ def main():
            '__N_SECOES_MIL__': f'{int(round(P26.secoes / 1000)):,}'.replace(',', '.'), '__N_LOCAIS__': f'{len(L):,}'.replace(',', '.'),
            '__OPCOES__': ''.join(f'<option value="{e}">{LAB[e]}</option>' for e in records), '__ESTADOS__': ' · '.join(ufs), '__ESTADOS_OPCOES__': ''.join(f'<option value="{u}">{u}</option>' for u in ufs),
            '__GALERIA__': ''.join(gal), '__DOWNLOADS__': ''.join(dl),
-           '__REPO_BLOCO__': repo_bloco, '__REPO_LINK__': repo_link, '__META_APOIO__': cfg['meta_apoio'], '__PIX_TITULAR__': esc(cfg['pix_titular']), '__PIX_CHAVE__': esc(cfg['pix_chave']), '__CONTATO__': cfg['contato_email'],
+           '__REPO_BLOCO__': repo_bloco, '__REPO_LINK__': repo_link, '__REPO_URL__': repo, '__META_APOIO__': cfg['meta_apoio'], '__PIX_TITULAR__': esc(cfg['pix_titular']), '__PIX_CHAVE__': esc(cfg['pix_chave']), '__CONTATO__': cfg['contato_email'],
            '__X_URL__': cfg['x_url'], '__INSTAGRAM_URL__': cfg['instagram_url'], '__PG_RESUMO__': f'{pg["RESUMO"]:02d}', '__PG_GRAFICOS__': f'{pg["GRAFICOS"]:02d}', '__PG_METODO__': f'{pg["METODO"]:02d}',
            '__PG_VARREDURA__': f'{pg["VARREDURA"]:02d}', '__PG_MAPA__': f'{pg["MAPA"]:02d}', '__PG_INCONS__': f'{pg["INCONS"]:02d}'}
     for k, v in rep.items():
