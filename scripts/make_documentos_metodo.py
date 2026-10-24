@@ -106,6 +106,10 @@ def load():
     D['PR'] = pd.read_csv(VAR / 'prioridade_locais_2026_T2.csv', low_memory=False, usecols=['uf', 'prioridade_observacao', 'pontos'], **CSV)
     D['U'] = pd.read_csv(MAPA / 'resumo_por_uf.csv', **CSV)
     D['Z'] = pd.read_csv(MAPA / 'zonas_todas.csv', **CSV)
+    lg = pd.read_csv(VAR / 'secoes_com_comportamento_por_eleicao.csv', low_memory=False, usecols=['eid', 'cmp_level', 'real', 'dir', 'excesso_alem_tardios'], **CSV)
+    tf = lambda s: s.astype(str).isin(['True', 'true', '1'])  # noqa: E731
+    lg = lg[tf(lg.real) & (lg.dir == 'A')]
+    D['excesso'] = {eid: dict(todos=100 * tf(g.excesso_alem_tardios).mean(), local=100 * tf(g[g.cmp_level == 'local'].excesso_alem_tardios).mean(), n_local=int((g.cmp_level == 'local').sum())) for eid, g in lg.groupby('eid')}
     D['head'] = git_head()
     D['ufs'] = [u for u in ORDER if u in D['L'].uf.unique()]
     return D
@@ -131,10 +135,11 @@ def bar_labels(ax, bars, fmt='{:,.0f}', fs=8.5):
             ax.annotate(fmt.format(h).replace(',', '.'), (b.get_x() + b.get_width() / 2, h), xytext=(0, 3), textcoords='offset points', ha='center', va='bottom', fontsize=fs, color=INK2)
 
 
-def two_panel(D, col, ylabel, title, fmt, hline=None):
-    """Duas janelas: mesmo prédio (≥3 pares) × sem par no prédio (comparação ao município); séries = com comportamento / comuns."""
+def two_panel(D, col, ylabel, title, fmt, hline=None, ncol='n'):
+    """Duas janelas: mesmo prédio (≥3 pares) × sem par no prédio (comparação ao município); séries = com comportamento / comuns.
+    Eixos independentes; sob cada eleição, o tamanho da base de cada barra (n com comportamento / n comuns)."""
     V = D['V']
-    f, axes = plt.subplots(1, 2, figsize=(13, 4.8), sharey=True)
+    f, axes = plt.subplots(1, 2, figsize=(13, 5.2))
     for ax, lv, ttl in zip(axes, ['local', 'município'], ['Mesmo prédio (3 ou mais seções vizinhas sem comportamento)', 'Sem vizinha comparável no prédio: comparação ao município']):
         xs = np.arange(len(V))
         b = [nv(D, e, 'com comportamento', lv) for e in V.eid]
@@ -146,7 +151,9 @@ def two_panel(D, col, ylabel, title, fmt, hline=None):
         bar_labels(ax, b1, fmt); bar_labels(ax, b2, fmt)
         if hline is not None:
             ax.axhline(hline, color=INK2, lw=.8, ls='--')
-        ax.set_xticks(xs); ax.set_xticklabels([LAB[e] for e in V.eid], fontsize=8.5); ax.set_title(ttl, fontsize=10.5, loc='center')
+        labs = [f'{LAB[e]}\nn = {n(getattr(rb, ncol))} / {n(getattr(rc, ncol))}' if rb is not None and rc is not None else LAB[e] for e, rb, rc in zip(V.eid, b, c)]
+        ax.set_xticks(xs); ax.set_xticklabels(labs, fontsize=8); ax.set_title(ttl, fontsize=10.5, loc='center')
+        ax.set_ylim(0, np.nanmax(vb + vc) * 1.22)
     axes[0].set_ylabel(ylabel); axes[0].legend(loc='upper left', fontsize=8.5)
     f.suptitle(title, x=.01, ha='left', fontsize=12, fontweight='bold')
     return f
@@ -154,7 +161,6 @@ def two_panel(D, col, ylabel, title, fmt, hline=None):
 
 def charts(D):
     R, T, V, L, H, U = D['R'], D['T'], D['V'], D['L'], D['H'], D['U']
-    Vx = V.set_index('eid')
     figs = []
     x = np.arange(len(V))
     labs = [LAB[e] for e in V.eid]
@@ -165,36 +171,39 @@ def charts(D):
     bar_labels(ax, b1); bar_labels(ax, b2)
     ax.set_xticks(x); ax.set_xticklabels(labs); ax.set_ylabel('seções'); ax.legend(loc='upper right')
     ax.set_title('Quantas seções mostraram cada comportamento, por eleição')
-    figs.append((save(f, '01_comportamento'), f'Cada eleição tem cerca de {n(V.secoes.mean() / 1000)} mil seções analisadas nos {len(D["ufs"])} estados. Votação tardia é muito mais comum nos 1º turnos presidenciais, compatível com filas maiores, do que nas eleições de prefeito; '
-                 'a habilitação manual excessiva aparece em número parecido em todas, porque é definida pelo P99 de cada estado.'))
+    first = V[V.eid.isin(['P2022', 'M2024', 'P2026'])].secoes
+    figs.append((save(f, '01_comportamento'), f'Os primeiros turnos têm entre {n(first.min() / 1000)} e {n(first.max() / 1000)} mil seções analisadas nos {len(D["ufs"])} estados; os segundos turnos de prefeito, só onde houve ({n(V[V.eid == "M2024b"].secoes.iloc[0] / 1000)} mil). '
+                 'Votação tardia é muito mais comum nos 1º turnos presidenciais, compatível com filas maiores, do que nas eleições de prefeito; a habilitação manual excessiva aparece em número parecido em todas, porque é definida pelo P99 de cada estado.'))
     # 2 diferença acima do limiar, por nível
     f = two_panel(D, 'pct_real', '% de seções com diferença acima do limiar', 'As seções com comportamento votam diferente das vizinhas? (por nível de comparação)', '{:.1f}%')
     p26l, c26l = nv(D, 'P2026', 'com comportamento', 'local'), nv(D, 'P2026', 'comuns', 'local')
     p26m, c26m = nv(D, 'P2026', 'com comportamento', 'município'), nv(D, 'P2026', 'comuns', 'município')
-    figs.append((save(f, '02_diferenca_real'), f'Diferença acima do limiar = pelo menos 5 pontos percentuais no lado A e |z| ≥ 2. A barra laranja é o mesmo teste nas seções sem comportamento: o que se espera por acaso. '
-                 f'À esquerda, o resultado principal: no mesmo prédio, em 2026, {n(p26l.pct_real, 1)}% das seções com comportamento ultrapassam o limiar contra {n(c26l.pct_real, 1)}% das comuns. '
+    figs.append((save(f, '02_diferenca_real'), f'Diferença acima do limiar = pelo menos 5 pontos percentuais, em módulo, na fração do lado A, e |z| ≥ 2. A barra laranja é o mesmo teste nas seções sem comportamento: o que se espera por acaso e por variação normal. Sob cada eleição, o número de seções de cada barra. '
+                 f'À esquerda, o resultado principal: no mesmo prédio, em 2026, {n(p26l.real)} de {n(p26l.n)} seções com comportamento ({n(p26l.pct_real, 1)}%) ultrapassam o limiar, contra {n(c26l.real)} de {n(c26l.n)} comuns ({n(c26l.pct_real, 1)}%): razão de {n(p26l.pct_real / c26l.pct_real, 1)}. '
                  f'À direita, as seções sem vizinha comparável (seção única ou prédio inteiro com comportamento): a referência é o município, a taxa é várias vezes maior nos dois grupos ({n(p26m.pct_real, 1)}% contra {n(c26m.pct_real, 1)}% em 2026) '
-                 'e por isso esse nível fica separado. Em qualquer nível, a maioria das seções com comportamento vota como a sua referência.'))
+                 'e por isso esse nível fica separado. Barras do 2º turno de prefeito têm poucas seções. Em qualquer nível, a maioria das seções com comportamento vota como a sua referência.'))
     # 3 direção, por nível
-    f = two_panel(D, 'pct_A', '% das diferenças acima do limiar a favor do lado A', 'Quando a seção difere da referência, para que lado pende? (por nível de comparação)', '{:.0f}%', hline=50)
-    figs.append((save(f, '03_direcao'), f'Lado A = PT (presidente) ou candidato líder do município (prefeito); 50% = sem direção. No mesmo prédio, em 2026, {n(p26l.pct_A, 0)}% das diferenças das seções com comportamento pendem para o PT, contra {n(c26l.pct_A, 0)}% nas comuns; '
-                 f'em 2022 T1 a distância é pequena ({n(nv(D, "P2022", "com comportamento", "local").pct_A, 0)}% contra {n(nv(D, "P2022", "comuns", "local").pct_A, 0)}%). Nas eleições de prefeito não se observa direção. '
+    f = two_panel(D, 'pct_A', '% das diferenças acima do limiar a favor do lado A', 'Quando a seção difere da referência, para que lado pende? (por nível de comparação)', '{:.0f}%', hline=50, ncol='real')
+    figs.append((save(f, '03_direcao'), f'Lado A = PT (presidente) ou candidato líder do município (prefeito); 50% = sem direção. Sob cada eleição, o número de diferenças acima do limiar de cada barra. No mesmo prédio, em 2026, {n(p26l.pct_A, 0)}% das diferenças das seções com comportamento pendem para o PT, contra {n(c26l.pct_A, 0)}% nas comuns; '
+                 f'em 2022 T1 a distância é pequena ({n(nv(D, "P2022", "com comportamento", "local").pct_A, 0)}% contra {n(nv(D, "P2022", "comuns", "local").pct_A, 0)}%). Nas eleições de prefeito não se observa direção consistente, e as bases são pequenas. '
                  'No nível município ambos os grupos pendem para A, o que mostra por que misturar níveis infla a leitura. Direção não é causa: pode refletir o perfil de quem enfrenta fila.'))
-    # 4 permutação: faixa do acaso (quantis do nulo) e ponto observado
+    # 4 permutação: faixa do acaso (quantis do nulo, dois esquemas) e ponto observado; só os indicadores que definem o comportamento da varredura
     f, ax = plt.subplots(figsize=(10, 4.8))
-    flags = ['f_late', 'f_manual', 'f_manual_late', 'f_last19', 'f_turnout', 'f_close', 'f_cancel', 'score2', 'score3']
+    flags = ['f_late', 'f_last19', 'f_close', 'f_manual', 'f_manual_late']
     xx = np.arange(len(flags))
     for i, (eid, col) in enumerate([('P2022', C1), ('P2026', C2), ('M2024', C3)]):
         s = T[T.eid == eid].set_index('flag').reindex(flags)
         xi = xx + (i - 1) * .27
-        ax.vlines(xi, s.null_q025, s.null_q975, color='#c3c2b7', lw=6, zorder=1, label='faixa de 95% do acaso' if i == 0 else None)
-        ax.plot(xi, s.within_place_diff, 'o', ms=6, color=col, label=LAB[eid], zorder=3)
+        ax.vlines(xi, s.null_q025, s.null_q975, color='#c3c2b7', lw=7, zorder=1, label='acaso (embaralhando no município)' if i == 0 else None)
+        ax.vlines(xi, s.null_q025_local, s.null_q975_local, color='#6b6a66', lw=2.2, zorder=2, label='acaso (embaralhando no local)' if i == 0 else None)
+        ax.plot(xi, s.within_place_diff, 'o', ms=6.5, color=col, label=LAB[eid], zorder=3)
     ax.axhline(0, color=INK2, lw=.8)
-    ax.set_xticks(xx); ax.set_xticklabels([q.replace('f_', '') for q in flags]); ax.set_ylabel('diferença (A − B) dentro do mesmo local, p.p.'); ax.legend(loc='upper left')
-    ax.set_title('Teste de direção: seções sinalizadas × demais do mesmo local (faixa cinza = acaso; ponto = observado)')
+    ax.set_xticks(xx); ax.set_xticklabels(['após 17h (late)', 'último voto ≥19h (last19)', 'encerramento >60 min (close)', 'manual acima do esperado', 'manuais após 17h ≥10'], fontsize=8.5)
+    ax.set_ylabel('diferença (A − B) dentro do mesmo local, p.p.'); ax.legend(loc='upper right', fontsize=8.5)
+    ax.set_title('Teste de direção nos cinco indicadores do comportamento (faixas = acaso; ponto = observado)')
     figs.append((save(f, '04_permutacao'), 'Cada ponto é a diferença de votação (lado A menos lado B) entre seções sinalizadas e não sinalizadas, medida como desvio da média do próprio local e ponderada por votos válidos. '
-                 'A faixa cinza vai do percentil 2,5 ao 97,5 das diferenças obtidas embaralhando a sinalização 500 vezes dentro do município: é o que o acaso produz. Ponto fora da faixa = diferença maior que o acaso. '
-                 'Embaralhar dentro do próprio local (teste mais fiel à pergunta do mesmo prédio) dá faixas parecidas ou mais estreitas nos indicadores de fila e não muda nenhum veredito. Em prefeito 2024 nada sai da faixa, com cancelamentos no limite.'))
+                 'As faixas vão do percentil 2,5 ao 97,5 das diferenças obtidas embaralhando a sinalização 500 vezes: a larga, dentro do município; a fina e escura, dentro do próprio local (mais fiel à pergunta do mesmo prédio). Ponto fora das faixas = diferença maior que o acaso. '
+                 'Os dois esquemas dão o mesmo veredito em todos os casos. Em prefeito 2024 nenhum ponto sai da faixa. Comparecimento, cancelamentos e os escores combinados não definem o comportamento da varredura e estão só na tabela do documento técnico.'))
     # 5 locais por UF e prioridade
     f, ax = plt.subplots(figsize=(10, 4.6))
     ct = L.groupby(['uf', 'prioridade_observacao']).size().unstack(fill_value=0).reindex(D['ufs']).fillna(0)
@@ -222,14 +231,19 @@ def charts(D):
     figs.append((save(f, '06_pontos'), f'O caso típico é uma única seção com comportamento em uma única eleição ({n(one, 0)}% dos locais). Os cortes de 25 e 45 pontos separam as prioridades média e alta. A escala vertical é logarítmica para que a cauda apareça.'))
     # 7 composição dos pontos nos locais de prioridade alta
     f, ax = plt.subplots(figsize=(10, 4.2))
-    comp = {'recorrência (2+ eleições)': 'pts_recorrencia', 'desvio acima do limiar nas presidenciais': 'pts_desvio_real_pres', 'direção única (presidenciais)': 'pts_direcao_unica', 'seções com comportamento em 2026 T1': 'pts_comportamento_2026_comp',
-            'seções com diferença em 2026 T1': 'pts_comportamento_2026_real', 'prédio inteiro atípico': 'pts_local_inteiro', 'volume de tardios/manuais': 'pts_volume', '2+ seções com desvio só nas presidenciais': 'pts_desvio_2plus_pres'}
-    vals = pd.Series({k: alta[v].mean() for k, v in comp.items() if v in alta}).sort_values()
-    bars = ax.barh(vals.index, vals.values, color=C1)
+    comp = {'recorrência (2+ eleições)': ('pts_recorrencia', 'operacional'), 'desvio acima do limiar nas presidenciais': ('pts_desvio_real_pres', 'resultado'), 'direção única (presidenciais)': ('pts_direcao_unica', 'resultado'),
+            'seções com comportamento em 2026 T1': ('pts_comportamento_2026_comp', 'operacional'), 'seções com diferença em 2026 T1': ('pts_comportamento_2026_real', 'resultado'), 'prédio inteiro atípico': ('pts_local_inteiro', 'misto'),
+            'volume de tardios/manuais': ('pts_volume', 'operacional'), '2+ seções com desvio só nas presidenciais': ('pts_desvio_2plus_pres', 'resultado')}
+    vals = pd.Series({k: alta[v].mean() for k, (v, _) in comp.items() if v in alta}).sort_values()
+    tipo = {k: t for k, (_, t) in comp.items()}
+    cor = {'operacional': C1, 'resultado': C2, 'misto': C3}
+    bars = ax.barh(vals.index, vals.values, color=[cor[tipo[k]] for k in vals.index])
     for b in bars:
         ax.text(b.get_width() + .3, b.get_y() + b.get_height() / 2, n(b.get_width(), 1), va='center', fontsize=8.5, color=INK2)
+    from matplotlib.patches import Patch
+    ax.legend(handles=[Patch(color=C1, label='operacional (fila/manual, volume)'), Patch(color=C2, label='resultado (diferenças de votação)'), Patch(color=C3, label='misto (prédio inteiro vs município)')], loc='lower right', fontsize=8.5)
     ax.set_xlabel('pontos médios por componente (locais de prioridade alta)')
-    ax.set_title('De onde vêm os pontos dos locais de prioridade alta (médias observadas)')
+    ax.set_title('De onde vêm os pontos dos locais de prioridade alta (médias)')
     ordem = ', '.join(vals.sort_values(ascending=False).index[:3])
     sem = int(alta.sinal_resultado.isin(['nenhum', 'só local (vs município)']).sum())
     zero = int((alta.pts_resultado == 0).sum())
@@ -245,11 +259,12 @@ def charts(D):
         b2 = ax.bar(xs + .2, s.pct_dif_entre_comuns, .38, color=C2, label='entre seções comuns')
         bar_labels(ax, b1, '{:.1f}%'); bar_labels(ax, b2, '{:.1f}%')
         ax.set_xticks(xs); ax.set_xticklabels([LAB[e] for e in s.index]); ax.set_title(ttl, fontsize=10.5, loc='center')
-    axes[0].set_ylabel('% de seções com diferença acima do limiar'); axes[0].legend(loc='upper left', fontsize=8.5)
-    f.suptitle('Prefeito × presidente, nas mesmas seções: a taxa de diferença é parecida entre os cargos', x=.01, ha='left', fontsize=12, fontweight='bold')
+        ax.set_ylim(0, np.nanmax(pd.concat([s.pct_dif_entre_comportamento, s.pct_dif_entre_comuns])) * 1.25)
+    axes[0].set_ylabel('% de seções com diferença acima do limiar'); axes[0].legend(loc='upper center', bbox_to_anchor=(.5, -.12), ncol=2, fontsize=8.5)
+    f.suptitle('Prefeito × presidente, nas mesmas seções, com denominadores', x=.01, ha='left', fontsize=12, fontweight='bold')
     pp = PXP[(PXP.recorte == 'todas')]
     pp26 = pp[pp.par.str.contains('2026')].iloc[0] if pp.par.str.contains('2026').any() else None
-    cap8 = ('Mesmas seções nas três eleições de primeiro turno, com denominadores explícitos. Entre as seções com comportamento, a fração que ultrapassa o limiar é da mesma ordem nos dois cargos. '
+    cap8 = ('Mesmas seções nas três eleições de primeiro turno, com denominadores explícitos. Entre as seções com comportamento, a fração que ultrapassa o limiar é da mesma ordem nos dois cargos (um pouco maior na municipal no painel de todas as seções, não no do mesmo prédio). '
             'A contagem bruta de seções com desvio “só nas presidenciais” é muito maior porque há muito mais seções com fila nos 1º turnos presidenciais, não porque elas desviem mais.')
     if pp26 is not None:
         cap8 += (f' Comparação estrita, seções com comportamento nos dois cargos ({pp26.par}, {n(pp26.secoes_com_comportamento_em_ambas)} seções): {n(pp26.pct_dif_presidencial, 1)}% contra {n(pp26.pct_dif_municipal, 1)}% '
@@ -292,7 +307,7 @@ def charts(D):
     bars = a2.bar(Ux.index, Ux.secoes_a_checar, .6, color=C1)
     bar_labels(a2, bars)
     a2.set_title('Seções a checar', loc='center'); a2.set_ylabel('seções')
-    figs.append((save(f, '11_mapa_uf'), f'O mapa cobre {n(int(Ux.locais.sum()))} locais e {n(int(Ux.secoes_a_checar.sum()))} seções nos {len(Ux)} estados; a sugestão é de {n(int(Ux.fiscais_sugeridos.sum()))} fiscais (1 por local de prioridade alta e 1 a cada 2 de média). '
+    figs.append((save(f, '11_mapa_uf'), f'O mapa cobre {n(int(Ux.locais.sum()))} locais e {n(int(Ux.secoes_a_checar.sum()))} seções nos {len(Ux)} estados; a sugestão é de {n(int(Ux.fiscais_sugeridos.sum()))} fiscais (1 por local de prioridade alta e 1 a cada 2 de média, arredondado para cima em cada zona). '
                  f'{n(int(Ux.locais_com_sinal_resultado.sum()))} desses locais têm alguma seção com diferença de resultado acima do limiar.'))
     # 12 cidades
     f, ax = plt.subplots(figsize=(10, 5))
@@ -304,7 +319,7 @@ def charts(D):
         ax.text(a + m, i, ' ' + n(a) + ' alta', va='center', fontsize=8.5, color=INK2)
     ax.set_xlabel('locais de votação'); ax.legend(loc='lower right')
     ax.set_title('Cidades com mais locais de prioridade alta')
-    figs.append((save(f, '12_cidades'), 'Cidades grandes aparecem porque têm mais locais; o que importa para alocar fiscais é a lista por zona e local dentro de cada cidade, no mapa de fiscalização.'))
+    figs.append((save(f, '12_cidades'), 'Cidades grandes aparecem porque têm mais locais; para alocar fiscais, o que conta é a lista por zona e local dentro de cada cidade, no mapa de fiscalização.'))
     return figs
 
 
@@ -318,7 +333,8 @@ def pdf_graficos(figs, D):
     P, H1, H2 = M.P, M.H1, M.H2
     st = [Paragraph('Varredura de fiscalização — caderno de gráficos', H1),
           Paragraph(f'Um gráfico por página, com uma frase de como ler. Os números vêm dos arquivos da varredura em relatorios/fiscalizacao/ ({len(D["ufs"])} estados) e são regenerados pelo script. '
-                    'Lado A = PT (presidente) ou líder do município (prefeito); lado B = PL ou 2º colocado. “Diferença acima do limiar” = ≥5 p.p. e |z| ≥ 2 frente à referência. Sinalização não é acusação.', P), Spacer(1, 6)]
+                    'Lado A = PT (presidente) ou líder do município (prefeito); lado B = PL ou 2º colocado. “Diferença acima do limiar” = ≥5 p.p. em módulo na fração do lado A e |z| ≥ 2 frente à referência. '
+                    'Os dados não dizem em quem votaram os eleitores tardios ou habilitados manualmente: compara-se a seção inteira. Sinalização não é acusação.', P), Spacer(1, 6)]
     for i, (p, cap) in enumerate(figs, 1):
         st += [Paragraph(f'Gráfico {i}', H2), img(p, 24), Paragraph('<b>Como ler:</b> ' + cap, P)]
         if i < len(figs):
@@ -334,7 +350,7 @@ def pdf_graficos(figs, D):
 def pdf_metodo(D, figs):
     P, H1, H2, SM, NOTE = M.P, M.H1, M.H2, M.SM, M.NOTE
     H3 = ParagraphStyle('H3', parent=H2, fontSize=11, spaceBefore=8, spaceAfter=3)
-    R, T, V, L, H, U, NV, PX, PXP, REC = D['R'], D['T'], D['V'], D['L'], D['H'], D['U'], D['NV'], D['PX'], D['PXP'], D['REC']
+    R, T, V, L, U, PX, PXP = D['R'], D['T'], D['V'], D['L'], D['U'], D['PX'], D['PXP']
     Rx, Vx = R.set_index('eid'), V.set_index('eid')
     ufs = D['ufs']
     alta = L[L.prioridade_observacao == 'alta']
@@ -449,23 +465,26 @@ def pdf_metodo(D, figs):
                      f'Na prioridade média, {n(int(media.sinal_resultado.isin(["nenhum", "só local (vs município)"]).sum()))} de {n(len(media))}.', P),
            Paragraph('Prioridade para o 2º turno de 2026: locais com seções presentes em 2026 e comportamento em 2026 T1 ou recorrente, ordenados por pontos. '
                      'No mapa de fiscalização entram os níveis alta e média; “seções a checar” são as seções do local com comportamento em 2026 T1 ou recorrentes (2+ eleições) existentes em 2026; '
-                     'fiscais sugeridos = 1 por local de prioridade alta + 1 a cada 2 de média (ponto de partida para alocação).', P),
+                     'fiscais sugeridos = 1 por local de prioridade alta + 1 a cada 2 de média, arredondado para cima em cada zona (ponto de partida para alocação).', P),
            Paragraph('8. Resultados principais', H2), Paragraph('8.1 Contagens, com o nível “local” (mesmo prédio, ≥3 pares) como resultado principal', H3)]
     t = [['Eleição', 'Seções', 'Com comp.', 'Tardia', 'Manual', 'Com comp. no nível local', 'acima do limiar (local)', '% (com comp., local)', '% (comuns, local)', 'acima do limiar (município)', 'Locais inteiros']]
     for eid in EIDS:
         r = Vx.loc[eid]
         t.append([LAB[eid], n(r.secoes), n(r.com_comportamento), n(r.tardia), n(r.manual), n(r.local_com_comportamento), n(r.local_dif_real), n(r.local_pct_real_com_comportamento, 1), n(r.local_pct_real_secoes_comuns, 1), n(r.real_municipio), n(r.locais_inteiros)])
     st += [wtable(t, [2.0, 1.5, 1.5, 1.4, 1.4, 1.9, 1.8, 1.8, 1.7, 1.9, 1.6], font=6.8), Paragraph('8.2 Direção (nível local) e resumo por estratos', H3)]
-    t = [['Eleição', 'Favor A / B (com comp., local)', '% A', 'Favor A / B (comuns, local)', '% A', 'OR Mantel–Haenszel (estratos = nível)', 'Comparec. dif. p.p.', 'Excesso A não explicado pelos tardios (%)']]
+    EX = D['excesso']
+    t = [['Eleição', 'Favor A / B (com comp., local)', '% A', 'Favor A / B (comuns, local)', '% A', 'OR Mantel–Haenszel (estratos = nível)', 'Comparec. dif. p.p.', 'Excesso A além dos votos após 17h: % (nível local)', '% (todos os níveis)']]
     for eid in EIDS:
         r = Vx.loc[eid]
-        t.append([LAB[eid], f'{n(r.local_favor_A)} / {n(r.local_favor_B)}', n(r.local_pct_A, 1), f'{n(r.local_comuns_favor_A)} / {n(r.local_comuns_favor_B)}', n(r.local_comuns_pct_A, 1), n(r.or_mantel_haenszel, 2), n(r.comparecimento_dif_media_pp, 2), n(r.pct_excesso_alem_tardios, 1)])
-    st += [wtable(t, [2.0, 2.6, 1.2, 2.6, 1.2, 2.6, 2.0, 2.8], font=6.8), Spacer(1, 4)]
+        ex = EX.get(eid, {})
+        t.append([LAB[eid], f'{n(r.local_favor_A)} / {n(r.local_favor_B)}', n(r.local_pct_A, 1), f'{n(r.local_comuns_favor_A)} / {n(r.local_comuns_favor_B)}', n(r.local_comuns_pct_A, 1), n(r.or_mantel_haenszel, 2), n(r.comparecimento_dif_media_pp, 2),
+                  n(ex.get('local', np.nan), 1), n(ex.get('todos', np.nan), 1)])
+    st += [wtable(t, [1.9, 2.4, 1.1, 2.4, 1.1, 2.3, 1.8, 2.3, 1.7], font=6.6), Spacer(1, 4)]
     p26, p22 = Vx.loc['P2026'], Vx.loc['P2022']
     pr = D['PR'].prioridade_observacao.value_counts()
     dirs = L.direcao.value_counts()
     for s in [f'No mesmo prédio, seções com comportamento ultrapassam o limiar em {n(Vx.local_pct_real_com_comportamento.min(), 1)}% a {n(Vx.local_pct_real_com_comportamento.max(), 1)}% dos casos, contra '
-              f'{n(Vx.local_pct_real_secoes_comuns.min(), 1)}% a {n(Vx.local_pct_real_secoes_comuns.max(), 1)}% nas seções comuns: a maioria vota como o resto do prédio; a associação existe, mas é pequena.',
+              f'{n(Vx.local_pct_real_secoes_comuns.min(), 1)}% a {n(Vx.local_pct_real_secoes_comuns.max(), 1)}% nas seções comuns (em 2026, razão de {n(p26.local_pct_real_com_comportamento / p26.local_pct_real_secoes_comuns, 1)}): a maioria vota como o resto do prédio.',
               f'Direção: em 2026 T1, no mesmo prédio, {n(p26.local_pct_A, 0)}% das diferenças das seções com comportamento pendem para o lado A (PT), contra {n(p26.local_comuns_pct_A, 0)}% nas comuns (OR de Mantel–Haenszel {n(p26.or_mantel_haenszel, 2)}). '
               f'Em 2022 T1 a distância é pequena ({n(p22.local_pct_A, 0)}% contra {n(p22.local_comuns_pct_A, 0)}%; OR {n(p22.or_mantel_haenszel, 2)}). Nas eleições de prefeito não se observa assimetria. A direção é robusta só em 2026 T1.',
               f'Misturando os níveis de comparação, 2026 T1 teria {n(p26.dif_real_com_comportamento)} diferenças acima do limiar, {n(p26.real_municipio)} delas no nível município, onde ambos os grupos pendem para A: por isso o resultado principal é o do nível local.',
@@ -474,8 +493,8 @@ def pdf_metodo(D, figs):
         st.append(Paragraph('• ' + s, P))
     st += [Paragraph('9. Limitações e o que não se pode concluir', H2)]
     for s in ['Os dados não observam compra de voto, coação, transporte de eleitores ou intenção. Observam horários, habilitações, encerramento e votos por seção.',
-              f'Não se sabe em quem votaram os eleitores habilitados manualmente ou após as 17h; compara-se o resultado da seção inteira. Em 2026 T1, mesmo que todos os votos após as 17h fossem do lado A, em {n(p26.pct_excesso_alem_tardios, 0)}% das seções com comportamento que destoaram a favor de A o excesso não seria explicado por eles: '
-              'a diferença é da seção, não só dos eleitores tardios.',
+              f'Não se sabe em quem votaram os eleitores habilitados manualmente ou após as 17h; compara-se o resultado da seção inteira. Em 2026 T1, no nível local, mesmo que todos os votos após as 17h fossem do lado A, em {n(EX.get("P2026", {}).get("local", np.nan), 0)}% das {n(EX.get("P2026", {}).get("n_local", 0))} seções com comportamento que destoaram a favor de A '
+              'o excesso não seria explicado por eles (o contrafactual cobre só os votos após as 17h, não os habilitados manualmente): a diferença é da seção, não só dos eleitores tardios.',
               'Votar após as 17h é legal para quem estava na fila; habilitação manual é o procedimento previsto quando a biometria falha ou o eleitor não a tem cadastrada. Ambos medem fila e falha, não irregularidade.',
               'A diferença frente aos vizinhos reflete também composição do eleitorado: seções do mesmo prédio atendem ruas e perfis distintos. O teste z e a taxa-base reduzem, mas não eliminam, esse fator.',
               'Seções sem par comum no prédio (seção única ou prédio inteiro com comportamento) são comparadas ao município, referência fraca com taxa-base alta nos dois grupos; estão separadas do resultado principal e não devem ser lidas como diferença frente ao prédio.',
@@ -538,9 +557,11 @@ def pdf_resumo(D, figs):
     Nn = ParagraphStyle('Nn', parent=M.NOTE, fontSize=11, leading=15)
     p26, p22 = Vx.loc['P2026'], Vx.loc['P2022']
     m24 = Vx.loc['M2024']
+    p26m, c26m = nv(D, 'P2026', 'com comportamento', 'município'), nv(D, 'P2026', 'comuns', 'município')
     alta = L[L.prioridade_observacao == 'alta']
     media = L[L.prioridade_observacao == 'média']
     n_alta_res = int(alta.sinal_resultado.isin(['seções', 'seções + local']).sum())
+    pr = D['PR'].prioridade_observacao.value_counts()
     st = [Paragraph('O que é esta varredura, em palavras simples', T1),
           Paragraph(f'Um levantamento feito com dados públicos do TSE, em {len(D["ufs"])} estados, para indicar <b>em quais escolas e prédios de votação vale a pena ter um fiscal atento</b> no 2º turno de 2026 e nas próximas eleições. '
                     'Ele não acusa ninguém e não mede probabilidade de fraude. Ele aponta onde olhar.', Pp),
@@ -548,17 +569,18 @@ def pdf_resumo(D, figs):
           Paragraph('Em cada seção (cada urna), nas eleições de 2022, 2024 e 2026, procuramos três coisas:', Pp),
           Paragraph('<b>1. Fila depois da hora.</b> A votação termina às 17h. Quem já está na fila pode votar depois. Procuramos seções onde muita gente votou depois das 17h, onde o último voto saiu depois das 19h, ou onde a urna só foi encerrada mais de uma hora depois, sem ter sido trocada.', Bb, bulletText='•'),
           Paragraph('<b>2. Liberação manual pelo mesário.</b> Quando a biometria falha ou o eleitor não tem digital cadastrada, o mesário libera o eleitor “na mão”. Isso é normal. O que procuramos é a seção onde isso aconteceu <i>muito mais</i> do que o esperado para o tipo de eleitor que ela tem (idosos, pessoas sem biometria).', Bb, bulletText='•'),
-          Paragraph(f'<b>3. Voto diferente dos vizinhos.</b> Comparamos o resultado dessa seção com o das outras seções <i>do mesmo prédio</i> que não tiveram fila nem liberação manual acima do normal. Se a diferença passa de 5 pontos e é maior do que a variação comum entre salas do mesmo prédio, '
-                    f'dizemos que ela “passou do limiar”. Entre salas comuns, isso acontece por acaso em cerca de {n(nv(D, "P2026", "comuns", "local").pct_real, 0)}% dos casos. Quando a seção não tem vizinha comparável no prédio, comparamos com o município inteiro, uma referência mais fraca, e contamos isso à parte.', Bb, bulletText='•'),
+          Paragraph(f'<b>3. Voto diferente dos vizinhos.</b> Comparamos o resultado dessa seção com o das outras seções <i>do mesmo prédio</i> que não tiveram fila nem liberação manual acima do normal. Se a diferença passa de 5 pontos, para qualquer lado, e é maior do que a variação comum entre salas do mesmo prédio, '
+                    f'dizemos que ela “passou do limiar”. Entre salas comuns, isso acontece por acaso e por variação normal em cerca de {n(nv(D, "P2026", "comuns", "local").pct_real, 0)}% dos casos. Quando a seção não tem vizinha comparável no prédio, comparamos com o município inteiro, uma referência mais fraca, e contamos isso à parte.', Bb, bulletText='•'),
           Paragraph('Depois juntamos tudo por prédio: quantas seções têm esses sinais, se repetem eleição após eleição, se o resultado delas pende sempre para o mesmo lado na eleição de presidente, e se o prédio inteiro se comporta assim. '
                     'Cada prédio recebe uma nota de 0 a 100 e uma <b>prioridade de observação</b>: alta, média ou baixa. É uma ordem para decidir onde colocar gente, não uma medida de irregularidade.', Pp),
           Paragraph('O que encontramos', Hh),
           Paragraph(f'<b>Fila é comum.</b> No 1º turno de 2026, {n(p26.com_comportamento)} seções mostraram fila tardia ou liberação manual acima do normal. A maioria é só fila.', Bb, bulletText='•'),
-          Paragraph(f'<b>Fila ou liberação manual, sozinhas, raramente vêm com resultado diferente.</b> No mesmo prédio, {n(p26.local_pct_real_com_comportamento, 1)}% das seções com esses sinais passaram do limiar em 2026; entre as seções comuns, {n(p26.local_pct_real_secoes_comuns, 1)}%. '
-                    f'Ou seja, {n(100 - p26.local_pct_real_com_comportamento, 0)}% das seções com sinais votaram como o resto do prédio.', Bb, bulletText='•'),
+          Paragraph(f'<b>Fila ou liberação manual, sozinhas, raramente vêm com resultado diferente.</b> Das {n(p26.com_comportamento)} seções com sinais em 2026, {n(p26.local_com_comportamento)} têm 3 ou mais vizinhas comparáveis no prédio; dessas, {n(p26.local_dif_real)} ({n(p26.local_pct_real_com_comportamento, 1)}%) passaram do limiar, '
+                    f'contra {n(p26.local_comuns_real)} de {n(p26.local_comuns)} seções comuns ({n(p26.local_pct_real_secoes_comuns, 1)}%): quase o dobro da taxa, mas {n(100 - p26.local_pct_real_com_comportamento, 0)}% votaram como o resto do prédio. '
+                    f'Outras {n(p26.cmp_municipio)} seções com sinais só puderam ser comparadas ao município ({n(p26.real_municipio)} passaram do limiar, {n(p26m.pct_real, 1)}%, contra {n(c26m.pct_real, 1)}% das comuns nessa situação).', Bb, bulletText='•'),
           Paragraph(f'<b>Quando a seção destoa do prédio, em 2026 isso ocorreu mais para um lado.</b> Nas seções com sinais que destoaram em 2026, {n(p26.local_pct_A, 0)}% penderam para o PT; nas seções comuns que também destoaram, {n(p26.local_comuns_pct_A, 0)}%. '
-                    f'Em 2022 a diferença foi pequena ({n(p22.local_pct_A, 0)}% contra {n(p22.local_comuns_pct_A, 0)}%). Na eleição de prefeito de 2024 não há lado ({n(m24.local_pct_A, 0)}% para o candidato líder, contra {n(m24.local_comuns_pct_A, 0)}% nas comuns).', Bb, bulletText='•'),
-          Paragraph(f'<b>Poucos prédios reúnem os sinais repetidos.</b> De {n(len(L))} prédios com ao menos uma seção sinalizada, {n(len(alta))} são de prioridade alta e {n(len(media))} de prioridade média. '
+                    f'Em 2022 a diferença foi pequena ({n(p22.local_pct_A, 0)}% contra {n(p22.local_comuns_pct_A, 0)}%). Na eleição de prefeito de 2024 não se vê direção consistente: {n(m24.local_pct_A, 0)}% para o candidato líder contra {n(m24.local_comuns_pct_A, 0)}% nas comuns, com poucas seções ({n(m24.local_dif_real)}) para afirmar algo.', Bb, bulletText='•'),
+          Paragraph(f'<b>Poucos prédios reúnem os sinais repetidos.</b> De {n(len(L))} prédios com ao menos uma seção sinalizada, {n(len(alta))} são de prioridade alta e {n(len(media))} de prioridade média; desses, {n(pr.get("alta", 0) + pr.get("média", 0))} têm seções em 2026 e entram no mapa de amanhã. '
                     f'Entre os de prioridade alta, {n(n_alta_res)} têm alguma seção que destoou do resultado; os outros {n(len(alta) - n_alta_res)} entram por fila e liberação manual repetidas, volume ou prédio inteiro fora do padrão do município.', Bb, bulletText='•'),
           Paragraph('O que isso significa e o que não significa', Hh),
           Paragraph('Não significa que houve fraude ou compra de votos nesses lugares. Fila pode ser só fila; liberação manual pode ser só biometria que falhou; um resultado diferente pode ser porque aquela sala atende uma rua diferente. '
@@ -570,11 +592,12 @@ def pdf_resumo(D, figs):
           Paragraph('se havia fila às 17h e de que tamanho;', Bb, bulletText='•'), Paragraph('quantos eleitores foram liberados manualmente pelo mesário e por quê;', Bb, bulletText='•'),
           Paragraph('a hora do último voto e a hora em que a urna foi encerrada;', Bb, bulletText='•'), Paragraph('se a urna foi trocada ou houve contingência;', Bb, bulletText='•'),
           Paragraph('quem está coordenando o prédio, quando o prédio inteiro tem o mesmo padrão.', Bb, bulletText='•'),
-          Paragraph('Ordem: prédios de prioridade alta primeiro. A sugestão é um fiscal por prédio de prioridade alta e um para cada dois de prioridade média.', Pp),
+          Paragraph('Ordem: prédios de prioridade alta primeiro. A sugestão é um fiscal por prédio de prioridade alta e um para cada dois de prioridade média, arredondando para cima em cada zona.', Pp),
           Paragraph('Onde estão os arquivos', Hh),
           Paragraph('Pasta relatorios/fiscalizacao/: <b>mapa_2026_T2/</b> (mapa e checklist por estado, PDF e Excel), <b>varredura/</b> (lista completa de prédios com a nota e os motivos), '
                     '<b>documentos/</b> (este resumo, o caderno de gráficos e o documento técnico com método e dados para quem quiser conferir).', Pp)]
-    st += [PageBreak(), Paragraph('Dois gráficos para entender', Hh), img(figs[1][0], 17.5), Paragraph('À esquerda, no mesmo prédio: seções com fila ou liberação manual quase não votam diferente das vizinhas; a barra azul é só um pouco maior que a laranja. À direita, sem vizinha comparável, a comparação é com o município e fica separada.', Pp),
+    st += [PageBreak(), Paragraph('Dois gráficos para entender', Hh), img(figs[1][0], 17.5),
+           Paragraph(f'À esquerda, no mesmo prédio: {n(p26.local_pct_real_com_comportamento, 1)}% das seções com fila ou liberação manual passaram do limiar em 2026, contra {n(p26.local_pct_real_secoes_comuns, 1)}% das comuns: quase o dobro da taxa, mas a grande maioria vota como as vizinhas. À direita, sem vizinha comparável, a comparação é com o município e fica separada.', Pp),
            Spacer(1, 8), img(figs[2][0], 17.5), Paragraph('Quando votam diferente, no mesmo prédio e em 2026, pendem para um lado mais do que as seções comuns; nas eleições de prefeito, não.', Pp)]
 
     def foot(c, d_):

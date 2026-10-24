@@ -418,11 +418,32 @@ def readme():
     return pd.DataFrame(rows, columns=['campo', 'descricao'])
 
 
+TW_L = 26.7 * cm - 12   # largura útil do texto em A4 paisagem com margens de 1,5 cm
+
+
+def wtable(rows, widths, font=6.0):
+    """Tabela que cabe na largura do texto: larguras relativas escaladas a TW_L, células em Paragraph (quebram por palavra), cabeçalho em negrito branco."""
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.platypus import Table, TableStyle
+    w = np.array(widths, float)
+    w = w / w.sum() * TW_L
+    body = ParagraphStyle('wt_body', parent=M.P, fontSize=font, leading=font + 1.8)
+    hdr = ParagraphStyle('wt_hdr', parent=body, fontName='Helvetica-Bold', textColor=colors.white)
+    esc = lambda s: str(s).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')  # noqa: E731
+    data = [[Paragraph(esc(c), hdr) for c in rows[0]]] + [[Paragraph(esc(c), body) for c in r] for r in rows[1:]]
+    t = Table(data, colWidths=list(w), repeatRows=1)
+    t.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), .25, colors.HexColor('#cccccc')), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'), ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1a365d')),
+                           ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f6f8fa')]), ('LEFTPADDING', (0, 0), (-1, -1), 3), ('RIGHTPADDING', (0, 0), (-1, -1), 3),
+                           ('TOPPADDING', (0, 0), (-1, -1), 2), ('BOTTOMPADDING', (0, 0), (-1, -1), 2)]))
+    assert t.wrap(TW_L, 1e6)[0] <= TW_L + .5, 'tabela mais larga que o texto'
+    return t
+
+
 def pdf(T, NV, REC, PX, PXP, pl, prio, zones, cities, hist):
     P, H1, H2, SM, NOTE = M.P, M.H1, M.H2, M.SM, M.NOTE
     st = [Paragraph('Varredura por local de votação: votos tardios + habilitação manual, diferença acima do limiar frente às seções vizinhas e cruzamento prefeito × presidente', H1),
           Paragraph('Comportamento TARDIO = votos após 17h acima do P99 do estado (≥20), ou último voto após 19h, ou encerramento >60 min sem troca de urna. MANUAL = habilitação manual pelo mesário acima do '
-                    'esperado (P99) ou ≥10 manuais após 17h. Cada seção com comportamento é comparada às outras seções do mesmo local sem comportamento; sem par no local, ao município. “Diferença acima do limiar” = ≥5 p.p. no lado A e |z| ≥ 2. '
+                    'esperado (P99) ou ≥10 manuais após 17h. Cada seção com comportamento é comparada às outras seções do mesmo local sem comportamento; sem par no local, ao município. “Diferença acima do limiar” = ≥5 p.p. em módulo na fração do lado A e |z| ≥ 2. '
                     'O mesmo teste aplicado às seções comuns dá a taxa esperada por acaso, por nível de comparação. Resultado principal: nível “local” (≥3 pares no mesmo prédio). Lado A = PT (presidente) ou líder do município (prefeito).', P),
           Paragraph('Como usar: a lista prioriza locais para observação presencial (fila, habilitação manual, encerramento) no 2º turno de 2026 e nas eleições seguintes. É ordem de prioridade, não probabilidade de irregularidade. '
                     'Sinalização não é acusação; os dados não observam compra de voto nem em quem votaram os eleitores tardios.', NOTE),
@@ -433,7 +454,7 @@ def pdf(T, NV, REC, PX, PXP, pl, prio, zones, cities, hist):
         t.append([r.eleicao, n(r.secoes), n(r.com_comportamento), n(r.tardia), n(r.manual), n(r.cmp_local), n(r.cmp_local_poucos), n(r.cmp_municipio), n(r.local_dif_real), n(r.local_pct_real_com_comportamento, 1), n(r.local_pct_real_secoes_comuns, 1),
                   f'{n(r.local_favor_A)} / {n(r.local_favor_B)}', f'{n(r.local_comuns_favor_A)} / {n(r.local_comuns_favor_B)}', n(r.real_municipio), n(r.or_mantel_haenszel, 2), n(r.comparecimento_dif_media_pp, 2),
                   n(r.votos_apos_17h), n(r.manuais_apos_17h), n(r.locais_inteiros)])
-    st += [M.table(t, font=5.0),
+    st += [wtable(t, [1.8, 1.2, 1.1, 1.1, 1.1, 1.3, 1.1, 1.3, 1.4, 1.2, 1.2, 1.4, 1.4, 1.2, 1.3, 1.3, 1.2, 1.2, 1.1], font=5.6),
            Paragraph('Leitura: “% com comp. (local)” é a fração das seções com comportamento, com ≥3 pares no mesmo prédio, cuja votação ultrapassa o limiar frente às vizinhas; “% comuns (local)” é a mesma fração nas seções sem comportamento. '
                      'A razão de chances de Mantel–Haenszel resume, por estrato de comparação, quanto as diferenças das seções com comportamento pendem mais para A do que as das comuns (1 = igual).', SM),
            Paragraph('1.1 Por nível de comparação (taxa de diferença acima do limiar e direção), por eleição', H2)]

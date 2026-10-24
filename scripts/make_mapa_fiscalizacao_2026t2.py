@@ -137,6 +137,8 @@ def build_tables(pl, h):
            'votos_tardios_total', 'manuais_apos_17h_total', 'pts_recorrencia', 'pts_desvio_real_pres', 'pts_direcao_unica', 'pts_comportamento_2026', 'pts_local_inteiro', 'pts_volume', 'pts_so_presidenciais']]
     L = L.rename(columns={'municipality': 'cod_municipio', 'municipality_name': 'municipio', 'zone': 'zona', 'voting_place': 'cod_local', 'place_name': 'local', 'secoes_max': 'secoes_no_local', 'nivel_risco': 'prioridade_observacao'})
     L['nivel_risco'] = L.prioridade_observacao   # alias do nome anterior
+    L['direcao'] = L.direcao.fillna('').astype(str)
+    L['sinal_resultado'] = L.sinal_resultado.fillna('').astype(str)
     L['_lv'] = L.nivel_risco.map({'alta': 0, 'média': 1})
     L = L.sort_values(['uf', 'zona', '_lv', 'pontos'], ascending=[True, True, True, False]).drop(columns='_lv')
     # zonas
@@ -194,7 +196,7 @@ def pdf_uf(uf, s, L, Z):
     Lu, Zu, su = L[L.uf == uf], Z[Z.uf == uf], s[s.uf == uf]
     st = [Paragraph(f'Mapa de fiscalização — {NAMES[uf]} — 2º turno de 2026 (25/10/2026)', H1),
           Paragraph(f'{n(len(Lu))} locais de votação ({n(int((Lu.nivel_risco == "alta").sum()))} prioridade alta, {n(int((Lu.nivel_risco == "média").sum()))} média) em {n(Zu.zona.nunique())} zonas; '
-                    f'{n(int(Lu.secoes_a_checar_n.sum()))} seções a checar. Fiscais sugeridos: {n(int(Zu.fiscais_sugeridos.sum()))} (1 por local de prioridade alta + 1 a cada 2 de média). '
+                    f'{n(int(Lu.secoes_a_checar_n.sum()))} seções a checar. Fiscais sugeridos: {n(int(Zu.fiscais_sugeridos.sum()))} (1 por local de prioridade alta + 1 a cada 2 de média, arredondado para cima em cada zona). '
                     f'Locais com alguma seção com diferença de resultado acima do limiar: {n(int(Lu.sinal_resultado.isin(["seções", "seções + local"]).sum()))}; os demais entram por fila/habilitação manual recorrentes, volume ou prédio inteiro divergente.', P),
           Paragraph('O que observar e registrar em cada seção: fila e votação após 17h (horário do último voto e do encerramento); habilitação manual de eleitor sem biometria (quantas e justificativa); '
                     'troca ou contingência de urna; quem coordena o prédio. Planilha com checklist por seção: MAPA_FISCALIZACAO_2026T2_' + uf + '.xlsx. Prioridade é ordem de observação, não probabilidade de irregularidade. Sinalização não é acusação.', NOTE),
@@ -233,7 +235,7 @@ def pdf_geral(L, Z, U):
     st = [Paragraph(f'Mapa de fiscalização — 2º turno de 2026 (25/10/2026) — visão geral dos {n(U.uf.nunique())} estados', H1),
           Paragraph(f'{n(len(L))} locais de votação de prioridade alta ou média ({n(int((L.nivel_risco == "alta").sum()))} alta), {n(int(L.secoes_a_checar_n.sum()))} seções a checar, {n(int(U.fiscais_sugeridos.sum()))} fiscais sugeridos. '
                     f'{n(int(L.sinal_resultado.isin(["seções", "seções + local"]).sum()))} locais têm alguma seção com diferença de resultado acima do limiar; os demais entram por fila/habilitação manual recorrentes, volume ou prédio inteiro divergente. '
-                    'Documentos por estado: MAPA_FISCALIZACAO_2026T2_<UF>.pdf e .xlsx (checklist por seção).', P),
+                    'Documentos por estado: MAPA_FISCALIZACAO_2026T2_&lt;UF&gt;.pdf e .xlsx (checklist por seção).', P),
           Paragraph('Ordem de alocação: locais de prioridade alta primeiro; dentro da zona, por pontos. Observar fila e votação após 17h, habilitação manual sem biometria, troca de urna e encerramento. '
                     'Prioridade é ordem de observação, não probabilidade de irregularidade. Sinalização não é acusação.', NOTE),
           Paragraph('1. Por estado', H2)]
