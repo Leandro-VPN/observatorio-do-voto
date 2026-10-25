@@ -337,7 +337,7 @@ def main():
     rep = {'__DATA_EDICAO__': edicao, '__GERADO_EM__': pd.Timestamp.today().strftime('%d/%m/%Y %H:%M'), '__COMMIT__': codigo, '__COMMIT_SITE__': git_head(), '__N_UFS__': str(len(ufs)),
            '__N_SECOES_MIL__': f'{int(round(P26.secoes / 1000)):,}'.replace(',', '.'), '__N_LOCAIS__': f'{len(L):,}'.replace(',', '.'),
            '__OPCOES__': ''.join(f'<option value="{e}">{LAB[e]}</option>' for e in records), '__ESTADOS__': ' · '.join(ufs), '__ESTADOS_OPCOES__': ''.join(f'<option value="{u}">{u}</option>' for u in ufs),
-           '__GALERIA__': ''.join(gal), '__DOWNLOADS__': ''.join(dl),
+           '__GALERIA__': ''.join(gal), '__DOWNLOADS__': ''.join(dl), '__NOTAS__': ''.join(build_notas(cfg)),
            '__REPO_BLOCO__': repo_bloco, '__REPO_LINK__': repo_link, '__REPO_URL__': repo, '__META_APOIO__': cfg['meta_apoio'], '__PIX_TITULAR__': esc(cfg['pix_titular']), '__PIX_CHAVE__': esc(cfg['pix_chave']), '__CONTATO__': cfg['contato_email'],
            '__X_URL__': cfg['x_url'], '__INSTAGRAM_URL__': cfg['instagram_url'], '__PG_RESUMO__': f'{pg["RESUMO"]:02d}', '__PG_GRAFICOS__': f'{pg["GRAFICOS"]:02d}', '__PG_METODO__': f'{pg["METODO"]:02d}',
            '__PG_VARREDURA__': f'{pg["VARREDURA"]:02d}', '__PG_MAPA__': f'{pg["MAPA"]:02d}', '__PG_INCONS__': f'{pg["INCONS"]:02d}'}
@@ -348,6 +348,74 @@ def main():
     (SITE / '.nojekyll').write_text('', encoding='utf-8')
     total = sum(p.stat().st_size for p in SITE.rglob('*') if p.is_file() and 'pacotes' not in p.parts)
     print('ok site', len(ufs), 'UFs; edição', edicao, 'código', codigo, '; figuras', len(gal), '; downloads', len(dl), f'; total (sem pacotes) {total / MB:.0f} MB')
+
+
+
+# --- notas (markdown simples → HTML dentro do site) -------------------------------------------------------------------
+import re  # noqa: E402
+
+NOTAS_DIR = FISC / 'notas'
+
+
+def md_inline(s):
+    s = esc(s)
+    s = re.sub(r'`([^`]+)`', r'<code>\1</code>', s)
+    s = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', s)
+    s = re.sub(r'(?<![\w*])\*(?!\s)(.+?)(?<!\s)\*(?!\w)', r'<i>\1</i>', s)
+    s = re.sub(r'(https?://[^\s<)]+)', r'<a href="\1" target="_blank" rel="noopener">\1</a>', s)
+    return s
+
+
+def md_to_html(text):
+    out, lines, i = [], text.splitlines(), 0
+    while i < len(lines):
+        ln = lines[i]
+        if ln.startswith('|') and i + 1 < len(lines) and re.match(r'^\|\s*-', lines[i + 1]):
+            hdr = [c.strip() for c in ln.strip('|').split('|')]
+            i += 2
+            rows = []
+            while i < len(lines) and lines[i].startswith('|'):
+                rows.append([c.strip() for c in lines[i].strip('|').split('|')])
+                i += 1
+            out.append('<div class="table-wrap"><table class="nota-tabela"><thead><tr>' + ''.join(f'<th>{md_inline(c)}</th>' for c in hdr) + '</tr></thead><tbody>'
+                       + ''.join('<tr>' + ''.join(f'<td>{md_inline(c)}</td>' for c in r) + '</tr>' for r in rows) + '</tbody></table></div>')
+            continue
+        m = re.match(r'^(#{1,3})\s+(.*)', ln)
+        if m:
+            out.append(f'<h{len(m.group(1))}>{md_inline(m.group(2))}</h{len(m.group(1))}>')
+        elif re.match(r'^(-|\d+\.)\s+', ln):
+            tag = 'ol' if ln[0].isdigit() else 'ul'
+            items = []
+            while i < len(lines) and re.match(r'^(-|\d+\.)\s+', lines[i]):
+                items.append(re.sub(r'^(-|\d+\.)\s+', '', lines[i]))
+                i += 1
+            out.append(f'<{tag}>' + ''.join(f'<li>{md_inline(x)}</li>' for x in items) + f'</{tag}>')
+            continue
+        elif ln.strip():
+            out.append(f'<p>{md_inline(ln)}</p>')
+        i += 1
+    return '\n'.join(out)
+
+
+def build_notas(cfg):
+    """Cada relatorios/fiscalizacao/notas/*.md vira site/notas/<nome>.html; devolve os cartões para a biblioteca."""
+    nd = SITE / 'notas'
+    nd.mkdir(exist_ok=True)
+    cards = []
+    for md in sorted(NOTAS_DIR.glob('*.md'), reverse=True) if NOTAS_DIR.exists() else []:
+        text = md.read_text(encoding='utf-8')
+        title = next((ln[2:].strip() for ln in text.splitlines() if ln.startswith('# ')), md.stem)
+        sub = next((ln.strip() for ln in text.splitlines() if ln.strip() and not ln.startswith('#')), '')
+        body = md_to_html(text)
+        html = (f'<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{esc(title)} · Observatório do Voto</title>'
+                f'<link rel="icon" href="../assets/logo.png"><link rel="stylesheet" href="../style.css"></head><body class="nota">'
+                f'<header><a class="brand" href="../"><img src="../assets/logo.png" alt=""><span>Observatório<br><b>do Voto</b></span></a><nav aria-label="Navegação"><a href="../#biblioteca">Biblioteca</a><a href="../#dados">Dados abertos</a></nav></header>'
+                f'<main class="nota-main">{body}<p class="chart-note">Fonte do texto: <code>{esc(md.name)}</code> no repositório; gerado dos dados da edição. Sinalização não é acusação.</p></main>'
+                f'<footer><p><small><a href="../">Voltar ao início</a> · Código sob MIT; dados e documentos sob CC BY 4.0.</small></p></footer></body></html>')
+        (nd / f'{md.stem}.html').write_text(html, encoding='utf-8')
+        shutil.copy2(md, nd / md.name)
+        cards.append(f'<a href="notas/{md.stem}.html"><span class="doc-icon">↗</span><span class="label">NOTA · HTML</span><h3>{esc(title.split("—")[0].replace("Nota:", "").strip())}</h3><p>{esc(sub[:160])}</p><span class="doc-bottom">Nota gerada dos dados <span>{md.stem}</span></span></a>')
+    return cards
 
 
 if __name__ == '__main__':
