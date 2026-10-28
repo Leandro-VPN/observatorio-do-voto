@@ -41,6 +41,20 @@ def test_indice_de_busca_por_uf():
         assert all((SITE / r[14]).is_file() for r in j['locais'] if r[14])
 
 
+def test_versao_em_ingles():
+    """site/en/: sem placeholders, links relativos resolvem a partir de site/en/, mesmo painel e link de volta ao português."""
+    html = (SITE / 'en/index.html').read_text(encoding='utf-8')
+    assert '<html lang="en">' in html and not re.search(r'__[A-Z_]+__', html)
+    refs = set(re.findall(r'(?:href|src)="([^"#:]+)"', html))
+    missing = [r for r in refs if not (SITE / 'en' / r.split('#')[0]).resolve().exists()]
+    assert not missing, missing
+    js = (SITE / 'en/app.js').read_text(encoding='utf-8')
+    rec_en = json.loads(re.search(r'const records = (\{.*?\});', js, re.S).group(1))
+    rec_pt = json.loads(re.search(r'const records = (\{.*?\});', (SITE / 'app.js').read_text(encoding='utf-8'), re.S).group(1))
+    assert rec_en == rec_pt
+    assert 'href="en/"' in (SITE / 'index.html').read_text(encoding='utf-8')
+
+
 def test_manifesto_da_edicao():
     ed = json.loads((SITE / 'dados/edicao.json').read_text(encoding='utf-8'))
     assert ed['edicao'] and ed['parametros']['MIN_PP'] == 5.0 and ed['ufs']
