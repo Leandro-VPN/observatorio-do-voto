@@ -36,7 +36,9 @@ def test_indice_de_busca_por_uf():
     assert ufs
     for uf in ufs:
         j = json.loads((SITE / f'dados/locais/{uf}.json').read_text(encoding='utf-8'))
-        assert j['uf'] == uf and len(j['colunas']) == 12 and all(len(r) == 12 for r in j['locais'])
+        assert j['uf'] == uf and len(j['colunas']) == 15 and all(len(r) == 15 for r in j['locais'])
+        # kit de campo: todo link aponta para um PDF publicado em site/kit/
+        assert all((SITE / r[14]).is_file() for r in j['locais'] if r[14])
 
 
 def test_manifesto_da_edicao():

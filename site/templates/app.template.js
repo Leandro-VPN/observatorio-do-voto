@@ -64,7 +64,12 @@ async function buscar() {
   bSt.textContent = `${fmt.format(hits.length)} locais encontrados em ${uf}` + (hits.length > show.length ? ` (mostrando os ${show.length} de maior pontuação; refine a busca)` : '') + '. Prioridade é ordem de observação, não probabilidade de irregularidade.';
   for (const r of show) {
     const tr = document.createElement('tr');
-    [r[0], r[1], r[2], r[3] || 'local sem nome cadastrado', r[4], r[5], r[6], r[7], r[8], r[9], r[10], r[11]].forEach((v, i) => { const td = document.createElement('td'); td.textContent = v; if (i === 4) td.className = 'pri-' + String(v).replace('é', 'e'); tr.appendChild(td); });
+    // liberações manuais 2026 T1: total (não associadas · % do total); vazio fora dos locais de prioridade alta
+    const man = r[12] === '' || r[12] === undefined ? '—' : `${fmt.format(r[12])} (${fmt.format(r[13])} · ${pct(r[13], r[12], 0)})`;
+    [r[0], r[1], r[2], r[3] || 'local sem nome cadastrado', r[4], r[5], r[6], r[7], r[8], r[9], r[10], r[11], man].forEach((v, i) => { const td = document.createElement('td'); td.textContent = v; if (i === 4) td.className = 'pri-' + String(v).replace('é', 'e'); tr.appendChild(td); });
+    const tk = document.createElement('td');
+    if (r[14]) { const a = document.createElement('a'); a.href = r[14]; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'PDF ↗'; a.setAttribute('aria-label', 'Kit de campo do local ' + (r[3] || r[2])); tk.appendChild(a); } else { tk.textContent = '—'; }
+    tr.appendChild(tk);
     bTb.appendChild(tr);
   }
 }

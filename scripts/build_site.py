@@ -19,7 +19,7 @@ from pypdf import PdfReader
 ROOT = Path('.')
 SITE = ROOT / 'site'
 FISC = ROOT / 'relatorios/fiscalizacao'
-VAR, DOC, MAPA = FISC / 'varredura', FISC / 'documentos', FISC / 'mapa_2026_T2'
+VAR, DOC, MAPA, KIT = FISC / 'varredura', FISC / 'documentos', FISC / 'mapa_2026_T2', FISC / 'kit_campo'
 CSV = dict(sep=';', decimal=',')
 LAB = {'P2026': 'Presidencial · 2026 · 1º turno', 'P2022': 'Presidencial · 2022 · 1º turno', 'P2022b': 'Presidencial · 2022 · 2º turno', 'M2024': 'Municipal · 2024 · 1º turno', 'M2024b': 'Municipal · 2024 · 2º turno'}
 ORDER_EIDS = ['P2026', 'P2022', 'P2022b', 'M2024', 'M2024b']
@@ -114,6 +114,11 @@ DESC = {
     'recorte': 'todas / local (≥3 pares).', 'presentes': 'Seções presentes nas três eleições.', 'com_comportamento': 'Seções com comportamento.', 'p_mcnemar': 'p do teste de McNemar (binomial exato).', 'or_mantel_haenszel': 'Razão de chances de Mantel–Haenszel por nível.',
     'within_place_diff': 'Diferença (A−B) sinalizadas − demais, desvio da média ponderada do local (p.p.).', 'null_sd': 'Desvio-padrão do nulo (embaralhamento no município).', 'null_q025': 'Percentil 2,5 do nulo.', 'null_q975': 'Percentil 97,5 do nulo.', 'p_perm': 'p bilateral por permutação (município).',
     'p_perm_local': 'p por permutação dentro do local.', 'q': 'q de Benjamini–Hochberg (município).', 'q_local': 'q (local).', 'flag': 'Indicador testado.', 'n_flag': 'Seções sinalizadas.', 'raw_diff': 'Diferença bruta A−B (p.p.).', 'excess_votes_a': 'Excesso de votos A nas sinalizadas (média ponderada do local).',
+    'manuais_2026T1': 'Liberações manuais (habilitação sem biometria) da seção no 1º turno de 2026, lidas do log.',
+    'n_manual_identificado': 'Liberações manuais em que o log registra "Mesário <título> habilitou o eleitor" (1º turno 2026).',
+    'n_manual_nao_associado': 'Liberações manuais por digital que a urna não associa a mesário cadastrado (achado A-002), 1º turno 2026.',
+    'n_manual_nao_associado_tarde': 'Idem, a partir das 16h.', 'encerramento_P2022': 'Encerramento da urna, 2022 1º turno (relógio da urna).',
+    'encerramento_P2022b': 'Encerramento da urna, 2022 2º turno.', 'encerramento_P2026': 'Encerramento da urna, 2026 1º turno.',
     'fiscais_sugeridos': '1 por local de prioridade alta + 1 a cada 2 de média, arredondado para cima por zona.', 'motivos': 'Resumo textual dos sinais da seção.', 'o_que_observar': 'Orientação ao fiscal.', 'comportamento_2026_T1': 'tardia / manual / tardia+manual / não (recorrente).',
 }
 
@@ -146,6 +151,8 @@ def dicionario(dd):
         add(f'mapa-fiscalizacao-2026-t2.zip/{f}', pd.read_csv(MAPA / f, low_memory=False, **CSV))
     for f in ['resumo_indicadores.csv', 'testes_permutacao.csv']:
         add(f, pd.read_csv(FISC / f, **CSV))
+    if (KIT / 'KIT_CAMPO_GERAL.csv').exists():
+        add('kit-campo-locais-prioridade-alta.csv', pd.read_csv(KIT / 'KIT_CAMPO_GERAL.csv', sep=';', encoding='utf-8-sig', low_memory=False))
     pq = FISC / 'secoes_indicadores_P2026.parquet'
     if pq.exists():
         add('secoes_indicadores_<eid>.parquet', pd.read_parquet(pq).head(2000))
@@ -192,16 +199,50 @@ Sinalização não é acusação: os indicadores medem desvio operacional e de r
 
 
 
-def search_index(dd, L):
-    """Índice de busca por UF: um JSON compacto por estado com os locais com comportamento (para a busca no navegador, sem servidor)."""
+def search_index(dd, L, extra=None):
+    """Índice de busca por UF: um JSON compacto por estado com os locais com comportamento (para a busca no navegador, sem servidor).
+    extra (opcional): liberações manuais do 1º turno de 2026 por tipo e caminho do kit de campo, por local."""
     out = dd / 'locais'
     out.mkdir(exist_ok=True)
-    cols = ['municipality_name', 'zone', 'voting_place', 'place_name', 'prioridade_observacao', 'pontos', 'sinal_resultado', 'secoes_com_comportamento', 'recorrentes_2plus', 'secoes_dif_real_pres', 'direcao', 'secoes_a_checar']
+    cols = ['municipality_name', 'zone', 'voting_place', 'place_name', 'prioridade_observacao', 'pontos', 'sinal_resultado', 'secoes_com_comportamento', 'recorrentes_2plus', 'secoes_dif_real_pres', 'direcao', 'secoes_a_checar',
+            'manuais_2026', 'nao_associadas_2026', 'kit']
+    L = L.merge(extra, on=['uf', 'municipality', 'zone', 'voting_place'], how='left') if extra is not None else L.assign(manuais_2026=None, nao_associadas_2026=None, kit=None)
+    num = lambda v: '' if pd.isna(v) else int(v)  # noqa: E731
     for uf, g in L.groupby('uf'):
-        g = g[cols].fillna('').sort_values('pontos', ascending=False)
-        recs = [[str(r.municipality_name), int(r.zone), str(r.voting_place), str(r.place_name), str(r.prioridade_observacao), int(r.pontos), str(r.sinal_resultado), int(r.secoes_com_comportamento), int(r.recorrentes_2plus),
-                 int(r.secoes_dif_real_pres), str(r.direcao), str(r.secoes_a_checar)] for r in g.itertuples()]
+        g = g.sort_values('pontos', ascending=False)
+        recs = [[str(r.municipality_name), int(r.zone), str(r.voting_place), '' if pd.isna(r.place_name) else str(r.place_name), str(r.prioridade_observacao), int(r.pontos),
+                 '' if pd.isna(r.sinal_resultado) else str(r.sinal_resultado), int(r.secoes_com_comportamento), int(r.recorrentes_2plus), int(r.secoes_dif_real_pres),
+                 '' if pd.isna(r.direcao) else str(r.direcao), '' if pd.isna(r.secoes_a_checar) else str(r.secoes_a_checar),
+                 num(r.manuais_2026), num(r.nao_associadas_2026), '' if pd.isna(r.kit) else str(r.kit)] for r in g.itertuples()]
         (out / f'{uf}.json').write_text(json.dumps({'uf': uf, 'colunas': cols, 'locais': recs}, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
+
+
+def liberacao_manual_e_kit():
+    """Liberações manuais por tipo (1º turno 2026, locais de prioridade alta), referência da amostra aleatória e kits por local.
+    Devolve (tabela por local ou None, referência em % ou None). Copia os PDFs dos kits para site/kit/."""
+    cad = ROOT / 'relatorios/verificacoes/cadencia'
+    man, sec, kmap = cad / 'locais_alta_habilitacao_manual.csv', cad / 'secoes_cadencia.parquet', KIT / 'kit_locais.csv'
+    if not (man.exists() and sec.exists()):
+        print('liberação manual por tipo não incluída (rode scripts/verifica_cadencia.py)', flush=True)
+        return None, None
+    a = pd.read_parquet(sec, columns=['g4', 'n_manual_identificado', 'n_manual_nao_associado', 'n_manual_outro'])
+    a = a[a.g4]
+    ref = 100 * a.n_manual_nao_associado.sum() / (a.n_manual_identificado + a.n_manual_nao_associado + a.n_manual_outro).sum()
+    m = pd.read_csv(man, sep=';', decimal=',', encoding='utf-8-sig')
+    ex = m[['uf', 'municipality', 'zone', 'voting_place', 'manuais', 'manual_nao_associado']].rename(columns={'manuais': 'manuais_2026', 'manual_nao_associado': 'nao_associadas_2026'})
+    if kmap.exists():
+        k = pd.read_csv(kmap, sep=';', encoding='utf-8-sig')
+        dest = SITE / 'kit'
+        if dest.exists():
+            shutil.rmtree(dest)
+        for r in k.itertuples():
+            (dest / r.arquivo).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(KIT / 'locais' / r.arquivo, dest / r.arquivo)
+        k['kit'] = 'kit/' + k.arquivo
+        ex = ex.merge(k[['uf', 'municipality', 'zone', 'voting_place', 'kit']], on=['uf', 'municipality', 'zone', 'voting_place'], how='outer')
+    else:
+        ex['kit'] = None
+    return ex, ref
 
 
 def main():
@@ -243,7 +284,10 @@ def main():
     if (VAR / 'edicao.json').exists():
         shutil.copy2(VAR / 'edicao.json', dd / 'edicao.json')
     (dd / 'COMO-USAR.md').write_text(COMO_USAR, encoding='utf-8')
-    search_index(dd, L)
+    extra, ref_na = liberacao_manual_e_kit()
+    search_index(dd, L, extra)
+    if (KIT / 'KIT_CAMPO_GERAL.csv').exists():
+        shutil.copy2(KIT / 'KIT_CAMPO_GERAL.csv', dd / 'kit-campo-locais-prioridade-alta.csv')
     for f in ['comparacao_por_nivel.csv', 'pres_x_pref_pareado.csv', 'pres_x_pref_mesmas_secoes.csv', 'recorrencia_condicional.csv']:
         shutil.copy2(VAR / f, dd / f.replace('_', '-'))
     for f in ['resumo_indicadores.csv', 'testes_permutacao.csv']:
@@ -298,6 +342,7 @@ def main():
                  ('CSV', 'dicionario-de-campos.csv', 'Dicionário de campos', 'Por arquivo e coluna: tipo, % de nulos, exemplo e descrição', 'site'),
                  ('CSV', 'glossario-metodologico.csv', 'Glossário metodológico', 'Definições de comportamento, comparação, limiar, pontuação e prioridade', 'site'),
                  ('MD', 'COMO-USAR.md', 'Como usar os dados', 'Formato dos arquivos e consultas DuckDB de exemplo, incluindo junção sem duplicar comparecimento', 'site'),
+                 ('CSV', 'kit-campo-locais-prioridade-alta.csv', 'Kit de campo: seções dos locais de prioridade alta', 'Uma linha por seção: histórico de último voto e encerramento, liberações manuais por tipo (2026 T1), o que observar e colunas em branco para anotar no dia', 'site'),
                  ('ZIP', 'varredura-locais.zip', 'Varredura por local de votação', 'Locais com pontuação e motivos, prioridade 2026 T2, histórico por seção, seções por eleição', 'release'),
                  ('ZIP', 'mapa-fiscalizacao-2026-t2.zip', 'Mapa de fiscalização 2026 T2', 'Locais, checklist por seção, zonas; PDF e Excel geral e por estado', 'release'),
                  ('ZIP', 'planilhas-varredura-por-uf.zip', 'Planilhas da varredura', 'VARREDURA_LOCAIS.xlsx e LOCAIS_<UF>.xlsx', 'release')]
@@ -307,6 +352,8 @@ def main():
             downloads.append(('PARQUET', name, f'Indicadores por seção · {LAB[eid]}', 'Uma linha por seção: BU, log, perfil, indicadores, lado A/B', 'release'))
     dl = []
     for tipo, f, titulo, desc, origem in downloads:
+        if origem == 'site' and not (dd / f).exists():
+            continue
         if origem == 'site':
             dl.append(f'<div><span class="file-type">{tipo}</span><div><h3>{esc(titulo)}</h3><p class="desc">{esc(desc)}</p></div><span class="size">{sz(dd / f)}</span><a href="dados/{f}" download aria-label="Baixar {esc(titulo)}">↧</a></div>')
         else:
@@ -340,7 +387,11 @@ def main():
            '__GALERIA__': ''.join(gal), '__DOWNLOADS__': ''.join(dl), '__NOTAS__': ''.join(build_notas(cfg)),
            '__REPO_BLOCO__': repo_bloco, '__REPO_LINK__': repo_link, '__REPO_URL__': repo, '__META_APOIO__': cfg['meta_apoio'], '__PIX_TITULAR__': esc(cfg['pix_titular']), '__PIX_CHAVE__': esc(cfg['pix_chave']), '__CONTATO__': cfg['contato_email'],
            '__X_URL__': cfg['x_url'], '__INSTAGRAM_URL__': cfg['instagram_url'], '__PG_RESUMO__': f'{pg["RESUMO"]:02d}', '__PG_GRAFICOS__': f'{pg["GRAFICOS"]:02d}', '__PG_METODO__': f'{pg["METODO"]:02d}',
-           '__PG_VARREDURA__': f'{pg["VARREDURA"]:02d}', '__PG_MAPA__': f'{pg["MAPA"]:02d}', '__PG_INCONS__': f'{pg["INCONS"]:02d}'}
+           '__PG_VARREDURA__': f'{pg["VARREDURA"]:02d}', '__PG_MAPA__': f'{pg["MAPA"]:02d}', '__PG_INCONS__': f'{pg["INCONS"]:02d}',
+           '__NOTA_MANUAL__': (f'<p class="chart-note">Liberações manuais 2026 T1: liberações sem biometria no 1º turno de 2026, somando todas as seções do prédio; entre parênteses, quantas e que fração '
+                               f'saíram por digital que a urna não associa a mesário cadastrado. Referência: {ref_na:.0f}% numa amostra aleatória de 5 mil seções. Acima disso costuma indicar mesário '
+                               'que não teve a digital registrada na abertura: lacuna de rastreabilidade, não voto indevido. Calculado para os locais de prioridade alta; o kit de campo (PDF) traz as '
+                               'seções a checar e os passos de observação no dia.</p>' if ref_na is not None else '')}
     for k, v in rep.items():
         html = html.replace(k, v)
     assert '__' not in html.replace('__html', ''), 'placeholder não substituído'
