@@ -9,17 +9,22 @@ Fonte: zips oficiais "bu_imgbu_logjez_rdv_vscmr" listados em relatorios/disco/in
               bu          -> research/bu_urna/<pleito>/<UF>/part-*.parquet (bytes originais do .bu)
   so_bu     UF/pleito que ja tem os logs: le so o .bu de cada urna
 Retomavel: arquivos ja gravados e partes ja concluidas sao pulados.
+Memoria contida: poucas tarefas em voo, indice so com os tipos usados, prioridade baixa no Windows e
+pausa enquanto a RAM livre estiver abaixo de MIN_LIVRE_MB (a maquina tem pouca folga com outros programas abertos).
 Uso: python scripts/baixa_pais.py [completo|so_bu|tudo] [--workers N]
 """
 import argparse
+import ctypes
 import json
+import os
 import re
 import struct
 import sys
+import threading
 import time
 import zipfile
 import zlib
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, ThreadPoolExecutor, wait
 from pathlib import Path
 
 import pandas as pd
@@ -35,6 +40,58 @@ MEMBER = re.compile(r'^(?P<stem>.+?)(?:\.(?P<a>bu|imgbu|logjez|rdv|vscmr)|-(?P<b
 TIPO = {'bu': 'bu', 'imgbu': 'imgbu', 'logjez': 'log', 'log': 'log', 'rdv': 'rdv', 'vscmr': 'assinatura', 'vota': 'assinatura'}
 CHUNK = 48
 SCATTER = 4 * 1024 ** 2
+MIN_LIVRE_MB = 1536
+USADOS = ('log', 'bu', 'assinatura')
+
+
+class _MemStatus(ctypes.Structure):
+    _fields_ = [('dwLength', ctypes.c_ulong), ('dwMemoryLoad', ctypes.c_ulong), ('ullTotalPhys', ctypes.c_ulonglong),
+                ('ullAvailPhys', ctypes.c_ulonglong), ('ullTotalPageFile', ctypes.c_ulonglong), ('ullAvailPageFile', ctypes.c_ulonglong),
+                ('ullTotalVirtual', ctypes.c_ulonglong), ('ullAvailVirtual', ctypes.c_ulonglong), ('ullAvailExtendedVirtual', ctypes.c_ulonglong)]
+
+
+def memoria_livre_mb():
+    """(RAM fisica livre, memoria virtual livre) em MB; fora do Windows devolve infinito."""
+    if not hasattr(ctypes, 'windll'):
+        return float('inf'), float('inf')
+    m = _MemStatus()
+    m.dwLength = ctypes.sizeof(_MemStatus)
+    ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(m))
+    return m.ullAvailPhys / 2 ** 20, m.ullAvailPageFile / 2 ** 20
+
+
+def espera_memoria():
+    while True:
+        fis, virt = memoria_livre_mb()
+        if fis >= MIN_LIVRE_MB and virt >= MIN_LIVRE_MB:
+            return
+        print(f'memoria baixa ({fis:.0f} MB de RAM livre, {virt:.0f} MB virtual): pausa de 30 s', flush=True)
+        time.sleep(30)
+
+
+def prioridade_baixa():
+    if hasattr(ctypes, 'windll'):
+        try:  # BELOW_NORMAL_PRIORITY_CLASS: a maquina continua responsiva enquanto baixa
+            ctypes.windll.kernel32.SetPriorityClass(ctypes.windll.kernel32.GetCurrentProcess(), 0x4000)
+        except Exception:  # noqa: BLE001
+            pass
+
+
+def em_janela(ex, fn, itens, n):
+    """fn sobre itens com no maximo n tarefas em voo (cada tarefa carrega um bloco de dados na memoria);
+    resultados na ordem em que terminam."""
+    pend = set()
+    for x in itens:
+        espera_memoria()
+        pend.add(ex.submit(fn, x))
+        if len(pend) >= n:
+            feitos, pend = wait(pend, return_when=FIRST_COMPLETED)
+            for f in feitos:
+                yield f.result()
+    while pend:
+        feitos, pend = wait(pend, return_when=FIRST_COMPLETED)
+        for f in feitos:
+            yield f.result()
 
 
 def member_bytes(block, begin, m):
@@ -50,7 +107,8 @@ def member_bytes(block, begin, m):
     return data
 
 
-def indice(url):
+def indice(url, tipos=USADOS):
+    """Membros do zip por urna, so dos tipos pedidos (o indice de uma UF grande ocupa centenas de MB)."""
     with RemoteZipReader(url, budget=1 << 30) as rz, zipfile.ZipFile(rz) as z:
         size = rz.size
         urns = {}
@@ -58,26 +116,31 @@ def indice(url):
             m = MEMBER.match(i.filename)
             if not m or Path(i.filename).name != i.filename:
                 continue
+            tp = TIPO[m.group('a') or m.group('b')]
+            if tp not in tipos:
+                continue
             u = urns.setdefault(m.group('stem'), {'stem': m.group('stem'), 'members': []})
-            u['members'].append({'name': i.filename, 'type': TIPO[m.group('a') or m.group('b')], 'offset': i.header_offset,
+            u['members'].append({'name': i.filename, 'type': tp, 'offset': i.header_offset,
                                  'csize': i.compress_size, 'size': i.file_size, 'crc': i.CRC, 'method': i.compress_type})
     return size, sorted(urns.values(), key=lambda u: min(m['offset'] for m in u['members']))
 
 
-_W = {}
+_TL = threading.local()  # uma conexao por thread/processo: o leitor remoto guarda posicao e nao pode ser compartilhado
 
 
 def _read(url, begin, end):
     for attempt in range(6):
         try:
-            r = _W.get(url)
-            if r is None:
-                _W.clear()
-                r = _W[url] = RemoteZipReader(url, budget=1 << 42)
+            r = getattr(_TL, 'r', None)
+            if r is None or getattr(_TL, 'url', None) != url:
+                if r is not None:
+                    r.close()
+                r = _TL.r = RemoteZipReader(url, budget=1 << 42)
+                _TL.url = url
             r.seek(begin)
             return r.read(end - begin)
         except Exception:
-            _W.clear()
+            _TL.r = None
             if attempt == 5:
                 raise
             time.sleep(3 * 2 ** attempt)
@@ -145,7 +208,7 @@ def run(el, uf, url, modo, workers):
     if done_flag.exists():
         print(el, uf, modo, 'JA CONCLUIDO', flush=True)
         return
-    size, ulist = indice(url)
+    size, ulist = indice(url, USADOS if modo == 'completo' else ('bu',))
     ulist = [u for u in ulist if any(m['type'] == 'bu' for m in u['members']) or modo == 'completo']
     feitos = set()
     for p in budir.glob('part-*.parquet'):
@@ -161,15 +224,33 @@ def run(el, uf, url, modo, workers):
             buf = []
 
     if modo == 'completo':
+        # pendente = falta o BU (parquet), o log ou a assinatura (arquivo com o tamanho certo) de alguma urna do bloco.
+        # Olhar so o BU pulava os logs das UFs cujo BU ja tinha vindo por outra coleta.
+        logdir, assdir, _ = destinos(el, uf)
+        no_hd = {}
+        for pasta in (logdir, assdir):
+            if pasta.exists():
+                with os.scandir(pasta) as it:
+                    no_hd.update({e.name: e.stat().st_size for e in it})
+
+        def falta(u):
+            for m in u['members']:
+                if m['type'] == 'bu':
+                    if u['stem'] not in feitos:
+                        return True
+                elif no_hd.get(m['name']) != m['size']:
+                    return True
+            return False
         chunks = [ulist[k:k + CHUNK] for k in range(0, len(ulist), CHUNK)]
-        todo = [(url, size, el, uf, cid, ch) for cid, ch in enumerate(chunks) if not all(u['stem'] in feitos for u in ch)]
+        todo = [(url, size, el, uf, cid, ch) for cid, ch in enumerate(chunks) if any(falta(u) for u in ch)]
+        del no_hd
         print(el, uf, 'completo: urnas', len(ulist), 'blocos pendentes', len(todo), flush=True)
-        with ProcessPoolExecutor(workers) as ex:
-            for k, (cid, bus, err, nb) in enumerate(ex.map(chunk_completo, todo, chunksize=1), 1):
+        with ProcessPoolExecutor(workers, initializer=prioridade_baixa) as ex:
+            for k, (cid, bus, err, nb) in enumerate(em_janela(ex, chunk_completo, todo, 2 * workers), 1):
                 buf.extend(b for b in bus if b['stem'] not in feitos)
                 erros.extend(err)
                 nbytes += nb
-                if len(buf) >= 5000:
+                if len(buf) >= 2000:
                     flush()
                 if k % 200 == 0 or k == len(todo):
                     el_ = time.monotonic() - t0
@@ -178,13 +259,13 @@ def run(el, uf, url, modo, workers):
         todo = [(url, size, u) for u in ulist if u['stem'] not in feitos]
         print(el, uf, 'so_bu: urnas', len(ulist), 'pendentes', len(todo), flush=True)
         with ThreadPoolExecutor(workers) as ex:
-            for k, (rec, err, nb) in enumerate(ex.map(bu_um, todo), 1):
+            for k, (rec, err, nb) in enumerate(em_janela(ex, bu_um, todo, 4 * workers), 1):
                 if rec:
                     buf.append(rec)
                 if err:
                     erros.append(err)
                 nbytes += nb
-                if len(buf) >= 5000:
+                if len(buf) >= 2000:
                     flush()
                 if k % 5000 == 0 or k == len(todo):
                     el_ = time.monotonic() - t0
@@ -200,8 +281,9 @@ def run(el, uf, url, modo, workers):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('modo', choices=['completo', 'so_bu', 'tudo'])
-    ap.add_argument('--workers', type=int, default=4)
+    ap.add_argument('--workers', type=int, default=2)
     a = ap.parse_args()
+    prioridade_baixa()
     d = pd.read_csv(INV, sep=';', encoding='utf-8-sig')
     d = d[d.status == 'ok'].copy()
     d['falta_log'] = d.logs_no_hd < 0.99 * d.log_arquivos.fillna(0)
