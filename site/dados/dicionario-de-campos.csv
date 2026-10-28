@@ -662,6 +662,34 @@ testes_permutacao.csv;eid;str;0,0;P2022;Identificador da eleição: P2022, P2022
 testes_permutacao.csv;lab;str;0,0;Presidente 2022 T1;Rótulo da eleição.
 testes_permutacao.csv;q;float64;0,0;0.0051;q de Benjamini–Hochberg (município).
 testes_permutacao.csv;q_local;float64;0,0;0.0096;q (local).
+kit-campo-locais-prioridade-alta.csv;uf;str;0,0;BA;Sigla da UF.
+kit-campo-locais-prioridade-alta.csv;cod_municipio;int64;0,0;38490;
+kit-campo-locais-prioridade-alta.csv;municipio;str;0,0;SALVADOR;
+kit-campo-locais-prioridade-alta.csv;zona;int64;0,0;4;
+kit-campo-locais-prioridade-alta.csv;cod_local;int64;0,0;1538;
+kit-campo-locais-prioridade-alta.csv;local;str;3,2;ESCOLA MUNICIPAL DE ILHA DE MARÉ;
+kit-campo-locais-prioridade-alta.csv;pontos_local;int64;0,0;72;
+kit-campo-locais-prioridade-alta.csv;secao;int64;0,0;242;
+kit-campo-locais-prioridade-alta.csv;comportamento_2026_T1;str;0,0;tardia+manual;tardia / manual / tardia+manual / não (recorrente).
+kit-campo-locais-prioridade-alta.csv;ultimo_voto_26;str;1,4;20:17:18;
+kit-campo-locais-prioridade-alta.csv;manuais_2026T1;float64;0,0;41.0;Liberações manuais (habilitação sem biometria) da seção no 1º turno de 2026, lidas do log.
+kit-campo-locais-prioridade-alta.csv;n_manual_identificado;float64;0,0;0.0;"Liberações manuais em que o log registra ""Mesário <título> habilitou o eleitor"" (1º turno 2026)."
+kit-campo-locais-prioridade-alta.csv;n_manual_nao_associado;float64;0,0;41.0;Liberações manuais por digital que a urna não associa a mesário cadastrado (achado A-002), 1º turno 2026.
+kit-campo-locais-prioridade-alta.csv;n_manual_nao_associado_tarde;float64;0,0;13.0;Idem, a partir das 16h.
+kit-campo-locais-prioridade-alta.csv;n_eleicoes_comportamento;int64;0,0;1;Nº de eleições (de 5) com comportamento.
+kit-campo-locais-prioridade-alta.csv;motivos;str;0,0;tardia: 2026 T1 | manual: 2026 T1 | dif.;Resumo textual dos sinais da seção.
+kit-campo-locais-prioridade-alta.csv;o_que_observar;str;0,0;"fila e votação após 17h; horário do últi";Orientação ao fiscal.
+kit-campo-locais-prioridade-alta.csv;encerramento_P2022;str;0,0;17h55;Encerramento da urna, 2022 1º turno (relógio da urna).
+kit-campo-locais-prioridade-alta.csv;encerramento_P2022b;str;0,0;17h02;Encerramento da urna, 2022 2º turno.
+kit-campo-locais-prioridade-alta.csv;encerramento_P2026;str;0,0;20h21;Encerramento da urna, 2026 1º turno.
+kit-campo-locais-prioridade-alta.csv;fila_as_17h (nº);float64;100,0;;
+kit-campo-locais-prioridade-alta.csv;manuais_observadas (nº);float64;100,0;;
+kit-campo-locais-prioridade-alta.csv;mesario_identificado_em_ata (sim/não);float64;100,0;;
+kit-campo-locais-prioridade-alta.csv;hora_ultimo_voto;float64;100,0;;
+kit-campo-locais-prioridade-alta.csv;hora_encerramento;float64;100,0;;
+kit-campo-locais-prioridade-alta.csv;troca_de_urna (sim/não);float64;100,0;;
+kit-campo-locais-prioridade-alta.csv;foto_bu (sim/não);float64;100,0;;
+kit-campo-locais-prioridade-alta.csv;observacoes;float64;100,0;;
 secoes_indicadores_<eid>.parquet;municipality;int32;0,0;30007;Código TSE do município (não é IBGE).
 secoes_indicadores_<eid>.parquet;zone;int32;0,0;205;Zona eleitoral.
 secoes_indicadores_<eid>.parquet;section;int32;0,0;1;Número da seção.
