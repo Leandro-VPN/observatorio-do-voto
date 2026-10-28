@@ -5,6 +5,7 @@ Entradas: relatorios/fiscalizacao/{varredura,documentos,mapa_2026_T2}/..., site/
 Saídas:   site/index.html, site/app.js, site/assets/figuras/, site/documentos/, site/dados/ (CSVs, zips, parquet opcional, dicionário)
 Nada é digitado à mão: regenerar o site = rodar este script depois da cadeia de análise.
 """
+import hashlib
 import json
 import shutil
 import subprocess
@@ -23,6 +24,23 @@ VAR, DOC, MAPA, KIT = FISC / 'varredura', FISC / 'documentos', FISC / 'mapa_2026
 CSV = dict(sep=';', decimal=',')
 LAB = {'P2026': 'Presidencial · 2026 · 1º turno', 'P2022': 'Presidencial · 2022 · 1º turno', 'P2022b': 'Presidencial · 2022 · 2º turno', 'M2024': 'Municipal · 2024 · 1º turno', 'M2024b': 'Municipal · 2024 · 2º turno'}
 ORDER_EIDS = ['P2026', 'P2022', 'P2022b', 'M2024', 'M2024b']
+# versão em inglês (site/en/): rótulos, títulos e textos dos downloads; figuras e PDFs seguem em português
+LAB_EN = {'P2026': 'Presidential · 2026 · 1st round', 'P2022': 'Presidential · 2022 · 1st round', 'P2022b': 'Presidential · 2022 · 2nd round',
+          'M2024': 'Municipal · 2024 · 1st round', 'M2024b': 'Municipal · 2024 · 2nd round'}
+DL_EN = {'resumo-por-eleicao.csv': ('Summary by election and round', 'Aggregated indicators by comparison level'),
+         'comparacao-por-nivel.csv': ('Comparison by level', 'Flagged × unflagged, by election and level (place / few pairs / municipality)'),
+         'pres-x-pref-pareado.csv': ('Mayor × president, same sections', 'Rates with denominators; see also pres-x-pref-mesmas-secoes.csv (McNemar)'),
+         'pres-x-pref-mesmas-secoes.csv': ('Mayor × president, strict comparison', 'Same sections flagged for both offices; McNemar test'),
+         'recorrencia-condicional.csv': ('Conditional recurrence', 'Probability of repeating the behaviour across elections, among sections present in both'),
+         'testes-permutacao.csv': ('Direction tests by permutation', 'Two shuffling schemes, null quantiles, p and q'),
+         'resumo-indicadores.csv': ('Coverage and indicators by election', 'Sections, logs, votes after 5 p.m., manual sequences, counts per indicator'),
+         'dicionario-de-campos.csv': ('Field dictionary', 'By file and column: type, % missing, example and description (in Portuguese)'),
+         'glossario-metodologico.csv': ('Methodological glossary', 'Definitions of behaviour, comparison, threshold, scoring and priority (in Portuguese)'),
+         'COMO-USAR.md': ('How to use the data', 'File format and sample DuckDB queries, including joins that do not double-count turnout (in Portuguese)'),
+         'kit-campo-locais-prioridade-alta.csv': ('Field kit: sections of high-priority polling places', 'One row per section: last vote and closing history, manual enablements by type (2026 R1), what to observe and blank columns for notes on the day'),
+         'varredura-locais.zip': ('Scan by polling place', 'Places with score and reasons, 2026 R2 priority, history by section, sections by election'),
+         'mapa-fiscalizacao-2026-t2.zip': ('Observation map 2026 R2', 'Places, checklist per section, zones; general and per-state PDF and Excel'),
+         'planilhas-varredura-por-uf.zip': ('Scan spreadsheets', 'VARREDURA_LOCAIS.xlsx and LOCAIS_<UF>.xlsx')}
 UF_ORDER = ['BA', 'SP', 'MG', 'RJ', 'PR', 'RS', 'PE', 'CE', 'PA', 'SC', 'MA']
 MB = 1024 ** 2
 TITULOS = {'01_comportamento': 'Seções com comportamento, por eleição', '02_diferenca_real': 'Diferença acima do limiar, por nível de comparação', '03_direcao': 'Direção das diferenças, por nível',
@@ -266,6 +284,19 @@ def main():
         titulo = TITULOS.get(it['arquivo'][:-4], it['arquivo'][3:-4].replace('_', ' ').capitalize())
         gal.append(f'<figure id="fig-{i}"><button type="button" class="zoom-btn" aria-label="Ampliar gráfico {i}: {esc(titulo)}" data-fig="{i}"><img src="assets/figuras/{it["arquivo"]}" alt="Gráfico {i}: {esc(titulo)}" loading="lazy"></button>'
                    f'<figcaption><b>Gráfico {i} · {esc(titulo)}</b>{esc(it["legenda"])} <a href="documentos/GRAFICOS.pdf#page={i}" target="_blank" rel="noopener">Ver no caderno (PDF) ↗</a></figcaption></figure>')
+    # galeria em inglês: legenda traduzida só se o texto em português de origem não mudou (impressão digital em legendas_en.json)
+    lp = SITE / 'templates/legendas_en.json'
+    leg_en = {x['arquivo']: x for x in json.loads(lp.read_text(encoding='utf-8'))} if lp.exists() else {}
+    gal_en = []
+    for i, it in enumerate(legendas, 1):
+        e = leg_en.get(it['arquivo'])
+        atual = bool(e) and e['fonte_sha256'] == hashlib.sha256(it['legenda'].encode('utf-8')).hexdigest()
+        if e and not atual:
+            print('legenda em inglês desatualizada (mostra aviso):', it['arquivo'], flush=True)
+        titulo = e['titulo_en'] if e else it['arquivo'][3:-4].replace('_', ' ')
+        legenda = e['legenda_en'] if atual else 'Caption available in Portuguese only for this edition (the chart was updated).'
+        gal_en.append(f'<figure id="fig-{i}"><button type="button" class="zoom-btn" aria-label="Enlarge chart {i}: {esc(titulo)}" data-fig="{i}"><img src="../assets/figuras/{it["arquivo"]}" alt="Chart {i}: {esc(titulo)}" loading="lazy"></button>'
+                      f'<figcaption><b>Chart {i} · {esc(titulo)}</b>{esc(legenda)} <a href="../documentos/GRAFICOS.pdf#page={i}" target="_blank" rel="noopener">See in the notebook (PDF, Portuguese) ↗</a></figcaption></figure>')
     # --- documentos
     (SITE / 'documentos').mkdir(exist_ok=True)
     docs = {'RESUMO': DOC / 'RESUMO_SIMPLES.pdf', 'GRAFICOS': DOC / 'GRAFICOS.pdf', 'METODO': DOC / 'METODO_E_DADOS.pdf', 'VARREDURA': VAR / 'VARREDURA_LOCAIS_RISCO.pdf',
@@ -372,6 +403,37 @@ def main():
     repo_bloco = (f'<p class="repo-note">Código e reprodução: <a href="{repo}" target="_blank" rel="noopener">{repo}</a>. Os dados brutos (boletins, logs de urna, correspondências e perfil) são públicos no TSE e são baixados pelos scripts do repositório.</p>'
                   if repo else '<p class="repo-note">Código e reprodução: repositório em publicação; o link será incluído aqui.</p>')
     repo_link = f'<a href="{repo}" target="_blank" rel="noopener">Código ↗</a>' if repo else ''
+    # downloads em inglês: mesmos arquivos, textos traduzidos, caminhos a partir de site/en/
+    dl_en = []
+    for tipo, f, titulo, desc, origem in downloads:
+        if origem == 'site' and not (dd / f).exists():
+            continue
+        if f.startswith('secoes_indicadores_'):
+            eid = f[len('secoes_indicadores_'):-len('.parquet')]
+            t_en, d_en = f'Indicators per section · {LAB_EN.get(eid, eid)}', 'One row per section: BU, log, profile, indicators, side A/B'
+        else:
+            t_en, d_en = DL_EN.get(f, (titulo, desc))
+        if origem == 'site':
+            dl_en.append(f'<div><span class="file-type">{tipo}</span><div><h3>{esc(t_en)}</h3><p class="desc">{esc(d_en)}</p></div><span class="size">{sz(dd / f)}</span><a href="../dados/{f}" download aria-label="Download {esc(t_en)}">↧</a></div>')
+        elif rel_base:
+            dl_en.append(f'<div><span class="file-type">{tipo}</span><div><h3>{esc(t_en)}</h3><p class="desc">{esc(d_en)} · GitHub Release {esc(tag)}</p></div><span class="size">{size_of(f)}</span><a href="{rel_base}{f}" aria-label="Download {esc(t_en)} (GitHub Release)">↧</a></div>')
+        else:
+            dl_en.append(f'<div><span class="file-type">{tipo}</span><div><h3>{esc(t_en)}</h3><p class="desc">{esc(d_en)}</p></div><span class="size">{size_of(f)}</span><span class="soon">BEING PUBLISHED</span></div>')
+    if rel_base:
+        if (pac / 'edicao-editorial.zip').exists() or 'edicao-editorial.zip' in man_rel['ativos']:
+            dl_en.append(f'<div><span class="file-type">ZIP</span><div><h3>Editorial package of the edition</h3><p class="desc">Everything the site generator reads (CSVs, PDFs, charts); restore with scripts/restore_edicao.py · GitHub Release {esc(tag)}</p></div><span class="size">{size_of("edicao-editorial.zip")}</span><a href="{rel_base}edicao-editorial.zip" aria-label="Download editorial package">↧</a></div>')
+        if (dd / 'manifesto-release.json').exists():
+            dl_en.append('<div><span class="file-type">JSON</span><div><h3>Release manifest</h3><p class="desc">SHA-256 of each package, parameters, inputs and producer code of the edition</p></div>'
+                         f'<span class="size">{sz(dd / "manifesto-release.json")}</span><a href="../dados/manifesto-release.json" download aria-label="Download manifest">↧</a></div>')
+        dl_en.append(f'<div><span class="file-type">REL</span><div><h3>All packages of the edition</h3><p class="desc">Release page on GitHub, with checksums and notes</p></div><a href="{cfg.get("release_url") or repo + "/releases"}" target="_blank" rel="noopener" aria-label="Open the release on GitHub">↗</a></div>')
+    repo_bloco_en = (f'<p class="repo-note">Code and reproduction: <a href="{repo}" target="_blank" rel="noopener">{repo}</a>. The raw data (urn tally reports, voting-machine logs, machine records and voter profile) are public at the TSE and are downloaded by the repository scripts.</p>'
+                     if repo else '<p class="repo-note">Code and reproduction: repository being published; the link will be added here.</p>')
+    repo_link_en = f'<a href="{repo}" target="_blank" rel="noopener">Code ↗</a>' if repo else ''
+    nota_manual_en = (f'<p class="chart-note">Manual enablements 2026 R1: voters enabled without biometrics in the 2026 first round, summed over all sections of the building; in brackets, how many and what share were '
+                      f'authorised by a fingerprint that the voting machine does not associate with a registered poll worker. Reference: {ref_na:.0f}% in a random sample of 5,000 sections. Values above that usually '
+                      'mean a poll worker whose fingerprint was not registered at opening: a traceability gap, not an improper vote. Computed for high-priority polling places; the field kit (PDF, in Portuguese) '
+                      'lists the sections to check and the observation steps for election day.</p>' if ref_na is not None else '')
+    notas_pt, notas_en = build_notas(cfg)
     # --- logo leve
     logo = SITE / 'assets/logo.png'
     if logo.stat().st_size > 400 * 1024:
@@ -384,7 +446,7 @@ def main():
     rep = {'__DATA_EDICAO__': edicao, '__GERADO_EM__': pd.Timestamp.today().strftime('%d/%m/%Y %H:%M'), '__COMMIT__': codigo, '__COMMIT_SITE__': git_head(), '__N_UFS__': str(len(ufs)),
            '__N_SECOES_MIL__': f'{int(round(P26.secoes / 1000)):,}'.replace(',', '.'), '__N_LOCAIS__': f'{len(L):,}'.replace(',', '.'),
            '__OPCOES__': ''.join(f'<option value="{e}">{LAB[e]}</option>' for e in records), '__ESTADOS__': ' · '.join(ufs), '__ESTADOS_OPCOES__': ''.join(f'<option value="{u}">{u}</option>' for u in ufs),
-           '__GALERIA__': ''.join(gal), '__DOWNLOADS__': ''.join(dl), '__NOTAS__': ''.join(build_notas(cfg)),
+           '__GALERIA__': ''.join(gal), '__DOWNLOADS__': ''.join(dl), '__NOTAS__': ''.join(notas_pt),
            '__REPO_BLOCO__': repo_bloco, '__REPO_LINK__': repo_link, '__REPO_URL__': repo, '__META_APOIO__': cfg['meta_apoio'], '__PIX_TITULAR__': esc(cfg['pix_titular']), '__PIX_CHAVE__': esc(cfg['pix_chave']), '__CONTATO__': cfg['contato_email'],
            '__X_URL__': cfg['x_url'], '__INSTAGRAM_URL__': cfg['instagram_url'], '__PG_RESUMO__': f'{pg["RESUMO"]:02d}', '__PG_GRAFICOS__': f'{pg["GRAFICOS"]:02d}', '__PG_METODO__': f'{pg["METODO"]:02d}',
            '__PG_VARREDURA__': f'{pg["VARREDURA"]:02d}', '__PG_MAPA__': f'{pg["MAPA"]:02d}', '__PG_INCONS__': f'{pg["INCONS"]:02d}',
@@ -396,6 +458,21 @@ def main():
         html = html.replace(k, v)
     assert '__' not in html.replace('__html', ''), 'placeholder não substituído'
     (SITE / 'index.html').write_text(html, encoding='utf-8')
+    # --- versão em inglês (site/en/): mesmo conteúdo, mesmos dados e documentos
+    en = SITE / 'en'
+    en.mkdir(exist_ok=True)
+    (en / 'app.js').write_text((SITE / 'templates/app.template.en.js').read_text(encoding='utf-8').replace('__RECORDS__', json.dumps(records, ensure_ascii=False)).replace('__PIX__', cfg['pix_chave']), encoding='utf-8')
+    data_en = pd.Timestamp(ed['edicao']).strftime('%Y-%m-%d') if ed.get('edicao') else edicao
+    rep_en = {**rep, '__DATA_EDICAO__': data_en, '__GERADO_EM__': pd.Timestamp.today().strftime('%Y-%m-%d %H:%M'),
+              '__N_SECOES_MIL__': f'{int(round(P26.secoes / 1000)):,}', '__N_LOCAIS__': f'{len(L):,}',
+              '__OPCOES__': ''.join(f'<option value="{e}">{LAB_EN[e]}</option>' for e in records),
+              '__GALERIA__': ''.join(gal_en), '__DOWNLOADS__': ''.join(dl_en), '__NOTAS__': ''.join(notas_en),
+              '__REPO_BLOCO__': repo_bloco_en, '__REPO_LINK__': repo_link_en, '__NOTA_MANUAL__': nota_manual_en}
+    html_en = (SITE / 'templates/index.template.en.html').read_text(encoding='utf-8')
+    for k, v in rep_en.items():
+        html_en = html_en.replace(k, v)
+    assert '__' not in html_en.replace('__html', ''), 'placeholder não substituído (en)'
+    (en / 'index.html').write_text(html_en, encoding='utf-8')
     (SITE / '.nojekyll').write_text('', encoding='utf-8')
     total = sum(p.stat().st_size for p in SITE.rglob('*') if p.is_file() and 'pacotes' not in p.parts)
     print('ok site', len(ufs), 'UFs; edição', edicao, 'código', codigo, '; figuras', len(gal), '; downloads', len(dl), f'; total (sem pacotes) {total / MB:.0f} MB')
@@ -449,10 +526,10 @@ def md_to_html(text):
 
 
 def build_notas(cfg):
-    """Cada relatorios/fiscalizacao/notas/*.md vira site/notas/<nome>.html; devolve os cartões para a biblioteca."""
+    """Cada relatorios/fiscalizacao/notas/*.md vira site/notas/<nome>.html; devolve os cartões para a biblioteca (português, inglês)."""
     nd = SITE / 'notas'
     nd.mkdir(exist_ok=True)
-    cards = []
+    cards, cards_en = [], []
     for md in sorted(NOTAS_DIR.glob('*.md'), reverse=True) if NOTAS_DIR.exists() else []:
         text = md.read_text(encoding='utf-8')
         title = next((ln[2:].strip() for ln in text.splitlines() if ln.startswith('# ')), md.stem)
@@ -466,7 +543,9 @@ def build_notas(cfg):
         (nd / f'{md.stem}.html').write_text(html, encoding='utf-8')
         shutil.copy2(md, nd / md.name)
         cards.append(f'<a href="notas/{md.stem}.html"><span class="doc-icon">↗</span><span class="label">NOTA · HTML</span><h3>{esc(title.split("—")[0].replace("Nota:", "").strip())}</h3><p>{esc(sub[:160])}</p><span class="doc-bottom">Nota gerada dos dados <span>{md.stem}</span></span></a>')
-    return cards
+        cards_en.append(f'<a href="../notas/{md.stem}.html" hreflang="pt-BR"><span class="doc-icon">↗</span><span class="label">NOTE · HTML (PT)</span><h3 lang="pt-BR">{esc(title.split("—")[0].replace("Nota:", "").strip())}</h3>'
+                        f'<p>Note generated from the data, in Portuguese.</p><span class="doc-bottom">Data note <span>{md.stem}</span></span></a>')
+    return cards, cards_en
 
 
 if __name__ == '__main__':

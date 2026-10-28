@@ -1,0 +1,74 @@
+[
+ {
+  "arquivo": "01_comportamento.png",
+  "titulo_en": "Sections with flagged behaviour, by election",
+  "legenda_en": "First rounds have between 367 and 385 thousand sections analysed in the 11 states; mayoral second rounds only where they took place (77 thousand). Late voting is much more common in presidential first rounds, consistent with longer queues, than in mayoral elections; excessive manual voter enablement appears in similar numbers in all of them, because it is defined by the 99th percentile of each state.",
+  "fonte_sha256": "95395ed6bdc61ec421ea7914cf9f956a5c8298b745ab88c8f8d01ea0cb42bafa"
+ },
+ {
+  "arquivo": "02_diferenca_real.png",
+  "titulo_en": "Difference above the threshold, by comparison level",
+  "legenda_en": "Difference above the threshold = at least 5 percentage points, in absolute value, in the share of side A, and |z| ≥ 2. The orange bar is the same test on sections without flagged behaviour: what is expected by chance and normal variation. Under each election, the number of sections in each bar. On the left, the main result: in the same building, in 2026, 664 of 15,593 flagged sections (4.3%) exceed the threshold, against 7,175 of 293,231 unflagged ones (2.4%): a ratio of 1.7. On the right, sections without a comparable neighbour (a single section or a whole building flagged): the reference is the municipality, the rate is several times higher in both groups (7.8% against 13.2% in 2026), and that is why this level is kept separate. Bars for the mayoral second round have few sections. At any level, most flagged sections do not exceed the threshold against their reference, which does not mean identical voting: it means a difference below 5 points or within normal variation.",
+  "fonte_sha256": "20fee31cf5d863ca65cd187b7947386d6e878bc5d186fc1e6ef8d4a3164c4823"
+ },
+ {
+  "arquivo": "03_direcao.png",
+  "titulo_en": "Direction of the differences, by level",
+  "legenda_en": "Side A = PT (president) or the leading mayoral candidate in the municipality; the 50% line marks an equal split between A and B, not an expected neutrality: the relevant reference is the orange bar of unflagged sections. Under each election, the number of differences above the threshold in each bar. In the same building, in 2026, 76% of the differences of flagged sections lean towards PT, against 54% among unflagged ones; in the 2022 first round the gap is small (63% against 57%). In mayoral elections there is no consistent direction, and the bases are small. At municipality level both groups lean towards A, which shows why mixing levels inflates the reading. Direction is not cause: it may reflect the profile of those who face queues.",
+  "fonte_sha256": "b6dc350f78b3a7ec089b11582db38a17a58bcefb3520ba6c044b1b2028b85879"
+ },
+ {
+  "arquivo": "04_permutacao.png",
+  "titulo_en": "Direction test by permutation",
+  "legenda_en": "Each point is the voting difference (side A minus side B) between flagged and unflagged sections, measured as a deviation from the mean of the polling place itself and weighted by valid votes. The bands run from the 2.5th to the 97.5th percentile of the differences obtained by shuffling the flags 500 times: the wide one within the municipality; the thin dark one within the polling place itself (closer to the same-building question). A point outside the bands = a difference larger than the shuffling produced 95% of the time, under the hypothesis of flags at random; it is not a measure of importance or cause. Both schemes give the same verdict in every case. For mayor in 2024 no point leaves the band. Turnout, cancellations and the combined scores do not define the behaviour used in the scan and appear only in the table of the technical document.",
+  "fonte_sha256": "79434d767e4b5f764a6e377fae22ba5169b88a02b793e2703096827199a1411d"
+ },
+ {
+  "arquivo": "05_locais_uf.png",
+  "titulo_en": "Polling places by state and priority",
+  "legenda_en": "Above each bar, the total number of polling places and, in brackets, how many are high priority. BA and PE account for 287 of the 451 high-priority polling places.",
+  "fonte_sha256": "66ed0b2bdee51648352086b3aec82e80d3dad8bfa6433d98a3d34fcceb515aa4"
+ },
+ {
+  "arquivo": "06_pontos.png",
+  "titulo_en": "Distribution of points",
+  "legenda_en": "The typical case is a single flagged section in a single election (43% of polling places). The 25- and 45-point cut-offs separate medium and high priority. The vertical scale is logarithmic so that the tail shows.",
+  "fonte_sha256": "4f2828972d3ab1581fea02d90b77b912e541cf9339e82c998fcc6d2fc084b5e2"
+ },
+ {
+  "arquivo": "07_composicao_pontos.png",
+  "titulo_en": "Composition of points (high priority)",
+  "legenda_en": "Averages over the 451 high-priority polling places; the three components that weigh most are recurrence (2+ elections), sections flagged in the 2026 first round, and the volume of late/manual votes. On average, 32 points are operational (recurring queues/manual enablement, volume, behaviour in 2026) and 22 come from results. 120 of the 451 have no section with a difference above the threshold and 28 have no result points at all: they enter through operations, not results.",
+  "fonte_sha256": "77bf8d39c20920007630eb784a8d37cf9913f922fa4dd63d7411822ab40bef86"
+ },
+ {
+  "arquivo": "08_pres_x_pref.png",
+  "titulo_en": "Mayor × president, same sections",
+  "legenda_en": "The same sections in the three first-round elections, with explicit denominators. In the right panel, the \"same building\" restriction is applied election by election, so denominators change between offices. Among flagged sections, the share above the threshold is of the same order for both offices (slightly higher for mayor in the all-sections panel, not in the same-building one). The raw count of sections deviating \"only in presidential elections\" is much larger because there are many more sections with queues in presidential first rounds, not because they deviate more. Strict comparison, sections flagged for both offices (President 2026 R1 × Mayor 2024 R1, 1,445 sections): 6.1% against 6.4% (McNemar p 0.74): no evidence of asymmetry between offices.",
+  "fonte_sha256": "52b8dee1fcfc582f116c3b0350f49f8afb0004df8d32801d6843c9278d655bad"
+ },
+ {
+  "arquivo": "09_recorrencia.png",
+  "titulo_en": "Recurrence across elections",
+  "legenda_en": "The vast majority appears only once. Among sections flagged in the 2022 first round, 37% were flagged again in the 2026 first round, against 6% of those that were not (6.0 times more). Recurrence may have structural causes (a large building, voters without biometrics, a zone that always has queues); that is why it counts in the score, without indicating any irregularity.",
+  "fonte_sha256": "287a78b603b2c07558fc154bd717faebfdf89c682c7c0ea9a0c3b8335897792d"
+ },
+ {
+  "arquivo": "10_votos_apos_17h.png",
+  "titulo_en": "Votes after 5 p.m.",
+  "legenda_en": "Direct count in the voting-machine logs: \"vote computed\" events timed after 5 p.m. on election day. In presidential first rounds they number in the millions; in second rounds and municipal elections, far fewer. Voting after 5 p.m. is legal for those already in the queue; the number measures queues, not irregularity.",
+  "fonte_sha256": "a3c2675a7d63a7dbc68b4e58bcf519a931de47ad8eb84c01b7b664d4287bb748"
+ },
+ {
+  "arquivo": "11_mapa_uf.png",
+  "titulo_en": "Observation map by state",
+  "legenda_en": "The map covers 2,806 polling places and 14,107 sections in the 11 states; the suggestion is 1,826 observers (1 per high-priority place and 1 for every 2 medium-priority places, rounded up within each zone). 861 of these places have at least one section with a result difference above the threshold.",
+  "fonte_sha256": "76dfb3be20eecdece5dc0ce4a7f5645be37617706191dcf9d7691f438857ed06"
+ },
+ {
+  "arquivo": "12_cidades.png",
+  "titulo_en": "Cities with the most high-priority polling places",
+  "legenda_en": "Large cities appear because they have more polling places; to allocate observers, what matters is the list by zone and place within each city, in the observation map.",
+  "fonte_sha256": "3729ca142fc944bc279cef0382ab50cbca50b08cc5fe1c28a11a801795173433"
+ }
+]
