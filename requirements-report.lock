@@ -17,3 +17,7 @@ pyyaml==6.0.3
 tabulate==0.10.0
 psutil==7.2.2
 pypdf==6.21.2
+# scripts/anomalias_2t.py (gradient boosting, MCD, Isolation Forest); versoes do ambiente de 30/10/2026
+scikit-learn==1.9.1
+joblib==1.6.0
+threadpoolctl==3.7.0

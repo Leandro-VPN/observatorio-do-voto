@@ -1,0 +1,69 @@
+// Observatório do Voto — DFD level 1 (processes and data stores). Render: python scripts/make_dfd.py
+// Processes = ellipses (real scripts named); stores = yellow boxes (real paths); external entities = blue boxes.
+digraph nivel1 {
+  graph [fontname="Helvetica", fontsize=10, pad=0.3, nodesep=0.35, ranksep=0.5, bgcolor="white"]
+  node  [fontname="Helvetica", fontsize=8.5, color="#1a365d", penwidth=1.1]
+  edge  [fontname="Helvetica", fontsize=7.5, color="#1a365d", fontcolor="#333333", arrowsize=0.7]
+
+  // ---- external entities
+  E1 [shape=box, style="filled", fillcolor="#e8eef7", label="E1  TSE: Open Data Portal and results system"]
+  E2 [shape=box, style="filled", fillcolor="#e8eef7", label="E2  Readers, researchers, election observers"]
+
+  // ---- processes
+  P1 [shape=ellipse, label="1.0  Collect and verify\nuf_pipeline.py (BU + logs), baixa_pais.py,\nbu_capture_all.py · auditabr.acquisition\nHTTP Range · CRC + size · SHA-256 receipt"]
+  P2 [shape=ellipse, label="2.0  Parse logs, build per-section tables\nuf_pipeline.py (log parser, DuckDB)\npadroes_2t.py (four-election base)"]
+  P3 [shape=ellipse, label="3.0  Check urn integrity\nintegridade_check.py, make_integridade_report.py\nmanifest × local log × BU / RDV / BU image\nurn signature and certificate × TSE CA"]
+  P4 [shape=ellipse, label="4.0  Analyse\nmake_fiscalizacao_study.py → make_varredura_locais.py\nmake_documentos_metodo.py, make_mapa_fiscalizacao_2026t2.py\nstudies: padroes_*, anomalias_*, ultimo_voto_*\nindicators · permutation tests · priority list · edition manifest"]
+  P5 [shape=ellipse, label="5.0  Build site\nbuild_site.py\nHTML, figure gallery, data packages, field dictionary"]
+  P6 [shape=ellipse, label="6.0  Publish release\npublish_release.py\ndraft → upload → SHA-256 × GitHub digest → publish\nmanifesto-release.json"]
+  P7 [shape=ellipse, label="7.0  Validate and deploy (CI)\nGitHub Actions · .github/workflows/pages.yml\nruff · pytest tests (src/auditabr) · pytest tests_report\ndeploy site/ only when every job passes"]
+  P8 [shape=ellipse, label="8.0  Restore an edition\nrestore_edicao.py (public release, no token)\nSHA-256 of each package × manifest before extracting"]
+
+  // ---- earlier scope (regional base), kept because CI tests it
+  P2b [shape=ellipse, color="#7a7a7a", fontcolor="#555555", label="2b  Regional base (earlier scope, local only)\nauditabr collect → parsers → pipeline\nvalidation, DuckDB snapshots, local API + dashboard"]
+  D7  [shape=box, style="filled", fillcolor="#f3f1e9", color="#7a7a7a", fontcolor="#555555", label="D7  DuckDB snapshots + manifest\nstorage-regional/  (outside git)"]
+
+  // ---- data stores
+  D1 [shape=box, style="filled", fillcolor="#fff8dc", label="D1  Raw captures + receipts  (outside git)\nresearch/estados/<UF>/<election>/{logs, bu.parquet}\nresearch/bu · research/bu_urna · research/assinaturas\n<file>.json receipt: SHA-256, CRC, source"]
+  D2 [shape=box, style="filled", fillcolor="#fff8dc", label="D2  Per-section tables  (outside git)\nresearch/…/analysis/sections.parquet,\ncandidate_sections.parquet, operations.jsonl\nresearch/padroes_2t/base_<year>.parquet"]
+  D3 [shape=box, style="filled", fillcolor="#fff8dc", label="D3  Integrity results  (outside git)\nresearch/integridade/resultado/"]
+  D4 [shape=box, style="filled", fillcolor="#fff8dc", label="D4  Reports, figures, tables  (outside git)\nrelatorios/fiscalizacao: varredura (+ edicao.json),\ndocumentos, mapa · relatorios/integridade\nrelatorios/verificacoes"]
+  D6 [shape=box, style="filled", fillcolor="#fff8dc", label="D6  Repository: code + site/  (git)\nscripts/, src/, tests/, tests_report/\nsite/index.html, app.js, assets, dados/"]
+  D5 [shape=box, style="filled", fillcolor="#fff8dc", label="D5  Immutable release + manifest\nGitHub Releases · tag from edicao.json\nexisting tag → new revision (-r2), never replaced"]
+
+  subgraph cluster_github {
+    label="Hosted on GitHub (inside the system boundary)"; labeljust="r"; fontsize=9; fontcolor="#555555"; color="#999999"; style="dashed"; margin=14
+    D6; D5; P7
+  }
+
+  // ---- main spine (heavier weight keeps it vertical)
+  E1 -> P1  [label="ZIP members (HTTP Range)", weight=3]
+  P1 -> D1  [label="bytes checked (CRC, size)\n+ JSON receipt with SHA-256", weight=3]
+  D1 -> P2  [label="urn logs, BU rows", weight=3]
+  P2 -> D2  [label="typed rows per section", weight=3]
+  D2 -> P4  [label="section-level data", weight=3]
+  P4 -> D4  [label="indicators, tests, PDFs, figures;\nedicao.json: code SHA, parameters, input hashes", weight=3]
+  D4 -> P5  [label="results of the current edition", weight=3]
+  P5 -> D6  [label="site/ (generated, committed)", weight=3]
+  D6 -> P7  [label="git push: code + site/", weight=3]
+  P7 -> E2  [label="published site (GitHub Pages)", weight=3]
+
+  // ---- integrity branch
+  D1 -> P3  [label="local logs, signatures"]
+  E1 -> P3  [label="manifest, BU, RDV, BU image,\nurn certificate (HTTP Range)"]
+  P3 -> D3  [label="pass / fail per urn\n(resumable parts)"]
+  P3 -> D4  [label="integrity report"]
+  D1 -> P4  [label="urn logs\n(research studies)"]
+
+  // ---- release, restore
+  P5 -> P6  [label="site/pacotes/: large data packages\n+ editorial package (outside git)"]
+  P6 -> D5  [label="assets + manifesto-release.json\n(SHA-256 checked against GitHub digest)"]
+  P6 -> P5  [label="release URL (site_config.json)\n→ second build", style=dashed, constraint=false]
+  D5 -> P8  [label="packages + manifest"]
+  P8 -> D4  [label="restored relatorios/\n(rebuild without raw data)", constraint=false]
+  D5 -> E2  [label="data packages + manifest\n(downloads)"]
+
+  // ---- earlier scope
+  E1  -> P2b [label="official CSVs in scope\n(HTTP Range)", color="#7a7a7a", fontcolor="#777777"]
+  P2b -> D7  [label="validated records, snapshots", color="#7a7a7a", fontcolor="#777777"]
+}
