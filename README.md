@@ -6,7 +6,7 @@
 - **Reproduce:** `pip install -r requirements-report.lock`, then `python scripts/restore_edicao.py --tag dados-AAAA-MM-DD` and `python scripts/build_site.py`.
 - **Tests:** `pytest tests` (core package, `requirements.lock`) and `pytest tests_report` (analysis and site). GitHub Actions runs both on every push and pull request.
 
-Pipeline reproduzível de dados públicos eleitorais, com testes e CI: coleta, processamento e análise de dados públicos do TSE (boletins de urna, logs de urna, correspondências de urnas e perfil do eleitorado), com métodos, testes estatísticos e priorização de observação eleitoral. Sinalização não é acusação. Site: https://leandro-vpn.github.io/observatorio-do-voto/ . Dados em GitHub Releases.
+Site: https://leandro-vpn.github.io/observatorio-do-voto/ · Sinalização não é acusação. O restante deste documento está em português.
 
 ## Mapa do repositório: três escopos
 
@@ -20,7 +20,7 @@ Aquisição (escopo 2 e insumos do 1): HTTP Range nos ZIPs do Portal de Dados Ab
 
 ## Pesquisa presidente e governador
 
-O pedido mais recente está em `research/`: quatro eleições presidenciais (2014/2018/2022, ambos os turnos; 2026, primeiro turno), comparação por partido e piloto BA/2022/T2. O [plano fixado](research/PLANO_ANALISE_A_PRIORI.md) prevalece para essa pesquisa. O processamento operacional e seus limites estão separados da base regional anterior.
+Os estudos de presidente e governador usam os dados em `research/`: quatro eleições presidenciais (2014 a 2026), comparação por partido e o piloto BA/2022/T2, com um [plano de análise fixado antes dos resultados](research/PLANO_ANALISE_A_PRIORI.md). O processamento e seus limites são separados da base regional anterior.
 
 O painel inclui **Piloto BA/2022/T2**, também acessível em http://127.0.0.1:8501/?study=pilot. A consolidação produz `research/piloto-ba-2022-t2/analysis/RELATORIO.md`, tabelas territoriais e manifesto. Resultados exploratórios de horários registrados e sequências manuais não equivalem aos indicadores confirmatórios ajustados.
 
@@ -41,7 +41,7 @@ Aplicação local para pesquisar **presidente e prefeito nos 16 estados do Norte
 - Norte: AC, AP, AM, PA, RO, RR e TO. Nordeste: AL, BA, CE, MA, PB, PE, PI, RN e SE.
 - Turnos onde ocorreram. Em 14/10/2026, o segundo turno de 2026 permanece `FUTURE`.
 
-O escopo foi reduzido por solicitação do usuário. Os documentos originais em `docs/interno/AUDITA_BR/` foram preservados como referência histórica; em divergências prevalece `docs/interno/PROMPT_MESTRE_UNIFICADO.md` com as alterações para dois cargos e duas regiões. UFs e cargos externos ao escopo são recusados na ingestão e nas consultas.
+Decisões de escopo estão registradas em `docs/interno/`. UFs e cargos fora do escopo são recusados na ingestão e nas consultas.
 
 ## Abrir no Windows
 
