@@ -31,33 +31,41 @@ def main():
     c = d[d.cenario == 'C']
     ufs = sorted(cob[cob.com_log_usado > 0].uf)
     completa = bool((cob.com_log_usado >= .99 * cob.secoes).all())
+    a19 = d[d.votos_apos_19h > 0]
+    ult19 = pd.to_datetime(a19.ultimo_voto).max() if len(a19) else None
+    apos = FF[FF.faixa_fina != 'até 17h00']
+    p15 = 100 * apos.loc[apos.faixa_fina == '17h00–17h15', 'secoes_estimadas'].sum() / apos.secoes_estimadas.sum() if len(apos) else 0
 
     st = [Paragraph('2º turno de 2026: a que horas foi o último voto de cada seção', H1),
           Paragraph('O boletim de urna traz o horário de encerramento, não o do último voto. O último voto está no log da urna: é a última linha '
                     '“O voto do eleitor foi computado” do dia. Convertemos para hora de Brasília e separamos as seções em três faixas: último voto até 17h00, '
                     'entre 17h00 e 19h00 e depois das 19h00.', P),
-          Paragraph(('Cobertura: todas as seções com log. ' if completa else
+          Paragraph((f'Cobertura: todos os logs do 2º turno no Brasil ({n(int(cob.com_log_usado.sum()))} de {n(int(cob.secoes.sum()))} seções; '
+                     f'{n(len(d))} com voto registrado no log). Sem amostra e sem peso. Exterior fora. ' if completa else
                      f'Cobertura: {len(ufs)} UFs ({", ".join(ufs)}), {n(int(cob[cob.uf.isin(ufs)].secoes.sum()))} seções. Todas as seções que encerraram a partir de 17h10 têm log; '
                      f'as que encerraram antes entram por uma amostra aleatória de {n(int(d[d.estrato == "encerrou_antes_17h10"].shape[0]))} seções, com peso por UF. '
                      + ('As demais UFs entram quando o download dos logs do 2º turno terminar.' if len(ufs) < 27 else
                         'Com o download completo dos logs, a conta passa a usar todas as seções, sem peso.')), NOTE),
           Paragraph('Último voto por faixa', H2)]
-    t = [['Último voto', 'Seções', '% das\nseções', 'Último voto\nmédio', 'Último voto\nmediano', 'Votos após\n17h (média)', 'Min. do último\nvoto ao encerr.', '% Lula', '% Flávio', 'Mais votos']]
+    t = [['Último voto', 'Seções', '% das\nseções', 'Último voto\nmédio', 'Último voto\nmediano', 'Votos após\n17h (média)', 'Min. do último\nao encerrar', '% Lula', '% Flávio', 'Mais votos']]
     for r in F.itertuples():
         t.append([r.faixa, n(r.secoes_estimadas), n(r.pct_secoes, 2), r.ultimo_voto_medio, r.ultimo_voto_mediano, n(r.votos_apos_17h_media, 1),
                   n(r.min_entre_ultimo_voto_e_encerramento_mediana, 1), n(r.pct_lula, 2), n(r.pct_flavio, 2), r.vencedor_votos])
     st += [table(t, font=6.8, widths=[2.6 * cm, 1.6 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm, 1.6 * cm, 1.9 * cm, 1.3 * cm, 1.3 * cm, 2.2 * cm]),
-           Paragraph(f'<b>Votos depois das 17h:</b> cerca de {n(v17)} em {n(vt)} ({n(100 * v17 / vt, 3)}%). <b>Depois das 19h:</b> {n(v19)} votos, um em cada '
-                     f'seção, todos até poucos minutos depois das 19h (eleitores que estavam na fila). % Lula e % Flávio são do total da seção no dia: '
+           Paragraph(f'<b>Votos depois das 17h:</b> {"" if completa else "cerca de "}{n(v17)} em {n(vt)} ({n(100 * v17 / vt, 3)}%). <b>Depois das 19h:</b> '
+                     + (f'{n(v19)} votos em {n(len(a19))} seções (no máximo {n(int(a19.votos_apos_19h.max()))} numa seção); o último às {ult19:%H:%M}. '
+                        if len(a19) else 'nenhum voto. ')
+                     + '% Lula e % Flávio são do total da seção no dia: '
                      'o voto é secreto e o registro de votos não tem horário, então não há como saber em quem votaram os eleitores depois das 17h.', SM),
            Paragraph('Detalhe entre 17h e 19h', H2)]
     t = [['Último voto', 'Seções', '% das seções', '% Lula']]
     for r in FF.itertuples():
         t.append([r.faixa_fina, n(r.secoes_estimadas), n(r.pct_secoes, 2), n(r.pct_lula, 2)])
     st += [table(t, font=7.5, widths=[4 * cm, 3 * cm, 3 * cm, 3 * cm]),
-           Paragraph('A maior parte das seções com voto depois das 17h termina até 17h15: é a fila que já estava formada às 17h.', SM),
+           Paragraph(f'Das seções com voto depois das 17h, {n(p15, 0)}% tiveram o último voto até 17h15'
+                     + (': é a fila que já estava formada às 17h.' if p15 >= 50 else '.'), SM),
            Paragraph('Seções que ficaram abertas até as 19h: quando foi o último voto?', H2)]
-    t = [['Cenário', 'Último voto', 'Seções', 'Último voto médio', 'Votos após 17h (média)', '% Lula']]
+    t = [['Cenário', 'Último voto', 'Seções', 'Último voto\nmédio', 'Votos após\n17h (média)', '% Lula']]
     nome = {'A': 'A · fechou e BU recebido antes das 19h', 'B': 'B · fechou antes das 19h, BU depois', 'C': 'C · fechou às 19h ou depois'}
     for r in X.itertuples():
         t.append([nome.get(r.cenario, r.cenario), r.faixa, n(r.secoes_estimadas), r.ultimo_voto_medio, n(r.votos_apos_17h_media, 1), n(r.pct_lula, 2)])

@@ -1,4 +1,5 @@
 """Capture BU (boletim de urna) rows by office for 10 states, 2014/2018/2022/2026, into normalized-name Parquet.
+--ufs and --offices widen it (e.g. --offices PRESIDENTE --ufs AC,AL,...,ZZ for the country-wide presidential series).
 
 2014/2018: PRESIDENTE and GOVERNADOR, turns 1 and 2.  2022/2026: GOVERNADOR (presidential BUs already captured).
 Output: research/bu/<year>-t<turn>/<UF>_<OFFICE>.parquet (+ .json receipt). Streams ZIP members via HTTP Range; no archive is stored.
@@ -55,10 +56,10 @@ def find_zip(year, turn, uf):
     return r
 
 
-def capture(year, turn, uf):
+def capture(year, turn, uf, offices=None):
     folder = OUT / f'{year}-t{turn}'
     folder.mkdir(parents=True, exist_ok=True)
-    offices = offices_for(year)
+    offices = offices or offices_for(year)
     done = all((folder / f'{uf}_{o}.json').exists() for o in offices)
     if done:
         return 'SKIP'
@@ -116,17 +117,20 @@ if __name__ == '__main__':
     p.add_argument('--years', default='2014,2018,2022,2026')
     p.add_argument('--workers', type=int, default=3)
     p.add_argument('--turns', default='1,2')
+    p.add_argument('--ufs', default=','.join(UFS), help='UFs separadas por virgula (ZZ = exterior)')
+    p.add_argument('--offices', default='', help='cargos, ex. PRESIDENTE; vazio = padrao do ano (offices_for)')
     a = p.parse_args()
+    offices = tuple(o.strip().upper() for o in a.offices.split(',') if o.strip()) or None
     jobs = []
     for y in map(int, a.years.split(',')):
         for t in ([int(x) for x in a.turns.split(',')] if y != 2026 else (1,)):
-            for uf in UFS:
+            for uf in a.ufs.split(','):
                 jobs.append((y, t, uf))
 
     def run(j):
         for attempt in range(6):
             try:
-                r = capture(*j)
+                r = capture(*j, offices=offices)
                 print(j, r, flush=True)
                 return j, None
             except Exception as exc:
