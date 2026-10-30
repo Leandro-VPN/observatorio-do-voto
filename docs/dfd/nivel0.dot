@@ -1,0 +1,18 @@
+// Observatório do Voto — DFD level 0 (context). Render: python scripts/make_dfd.py
+digraph nivel0 {
+  graph [fontname="Helvetica", fontsize=10, pad=0.3, nodesep=0.8, ranksep=1.1, bgcolor="white"]
+  node  [fontname="Helvetica", fontsize=9, color="#1a365d", penwidth=1.2]
+  edge  [fontname="Helvetica", fontsize=8, color="#1a365d", fontcolor="#333333", arrowsize=0.8]
+
+  E1 [shape=box, style="filled", fillcolor="#e8eef7", label="E1  TSE: Open Data Portal and results system\n(official public files; cdn.tse.jus.br, resultados.tse.jus.br)"]
+  P0 [shape=ellipse, style="filled", fillcolor="white", width=2.6, height=1.5, fixedsize=true,
+      label="0\nObservatório do Voto\n\ncollect · verify · analyse\n· publish"]
+  E2 [shape=box, style="filled", fillcolor="#e8eef7", label="E2  Readers, researchers, election observers"]
+  N  [shape=note, style="filled", fillcolor="#fbfbf8", color="#999999", fontsize=8, fontcolor="#444444",
+      label="Inside the system boundary, hosted on GitHub:\n• Releases: immutable data packages with a manifest\n• Actions: tests that gate the deployment\n• Pages: the static site"]
+
+  E1 -> P0 [label="ZIP members by HTTP Range: ballot-box reports (BU),\nurn logs, vote records (RDV), signatures, voter profile"]
+  P0 -> E2 [label="static site (GitHub Pages), PDF reports,\ndata packages + manifest (GitHub Releases)"]
+  P0 -> N  [style=invis]
+  {rank=same; P0; N}
+}
