@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-$projectRoot = $PSScriptRoot
+$projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $pidFile = Join-Path $projectRoot 'storage/server.pid'
 if (-not (Test-Path -LiteralPath $pidFile)) {
     Write-Output 'Sem serviço registrado. Se iniciou em um terminal, use Ctrl+C nele.'

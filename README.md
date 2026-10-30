@@ -1,6 +1,12 @@
 # Observatório do Voto / AUDITA-BR
 
-Código de coleta, processamento e análise reproduzível de dados públicos do TSE (boletins de urna, logs de urna, correspondências de urnas e perfil do eleitorado), com métodos, testes estatísticos e priorização de observação eleitoral. Sinalização não é acusação. Site: https://leandro-vpn.github.io/observatorio-do-voto/ . Dados em GitHub Releases.
+**A reproducible pipeline for Brazilian public election data, with tests and CI.**
+- **What it is:** Python code that collects, verifies and analyses official TSE (Superior Electoral Court) data (ballot-box reports, urn logs, digital vote records and voter profiles) and builds statistical reports and a static site. Statistical flags are not accusations.
+- **Data source:** TSE Open Data Portal and TSE result files, fetched by HTTP Range with a SHA-256 hash and receipt per file. Raw data stays out of git, and derived data is published as GitHub Releases.
+- **Reproduce:** `pip install -r requirements-report.lock`, then `python scripts/restore_edicao.py --tag dados-AAAA-MM-DD` and `python scripts/build_site.py`.
+- **Tests:** `pytest tests` (core package, `requirements.lock`) and `pytest tests_report` (analysis and site). GitHub Actions runs both on every push and pull request.
+
+Pipeline reproduzível de dados públicos eleitorais, com testes e CI: coleta, processamento e análise de dados públicos do TSE (boletins de urna, logs de urna, correspondências de urnas e perfil do eleitorado), com métodos, testes estatísticos e priorização de observação eleitoral. Sinalização não é acusação. Site: https://leandro-vpn.github.io/observatorio-do-voto/ . Dados em GitHub Releases.
 
 ## Mapa do repositório: três escopos
 
@@ -35,11 +41,11 @@ Aplicação local para pesquisar **presidente e prefeito nos 16 estados do Norte
 - Norte: AC, AP, AM, PA, RO, RR e TO. Nordeste: AL, BA, CE, MA, PB, PE, PI, RN e SE.
 - Turnos onde ocorreram. Em 14/10/2026, o segundo turno de 2026 permanece `FUTURE`.
 
-O escopo foi reduzido por solicitação do usuário. Os documentos originais em `AUDITA_BR/` foram preservados como referência histórica; em divergências prevalece `PROMPT_MESTRE_UNIFICADO.md` com as alterações para dois cargos e duas regiões. UFs e cargos externos ao escopo são recusados na ingestão e nas consultas.
+O escopo foi reduzido por solicitação do usuário. Os documentos originais em `docs/interno/AUDITA_BR/` foram preservados como referência histórica; em divergências prevalece `docs/interno/PROMPT_MESTRE_UNIFICADO.md` com as alterações para dois cargos e duas regiões. UFs e cargos externos ao escopo são recusados na ingestão e nas consultas.
 
 ## Abrir no Windows
 
-Nesta instalação, execute `iniciar.ps1` no PowerShell ou:
+Nesta instalação, execute `docs/interno/iniciar.ps1` no PowerShell ou:
 
 ```powershell
 cd D:\votos
@@ -48,7 +54,7 @@ cd D:\votos
 
 Painel: http://127.0.0.1:8501 · API/OpenAPI: http://127.0.0.1:8000/docs . Os serviços ficam restritos ao computador local. Ctrl+C encerra ambos.
 
-O serviço iniciado em segundo plano nesta entrega pode ser encerrado com `./parar.ps1`. O script confere se o PID pertence ao Python deste projeto antes de encerrar seus processos.
+O serviço iniciado em segundo plano nesta entrega pode ser encerrado com `docs/interno/parar.ps1`. O script confere se o PID pertence ao Python deste projeto antes de encerrar seus processos.
 
 ## Instalar em outra máquina
 

@@ -19,7 +19,7 @@ where = ["src"]
 auditabr = ["resources/*.sql", "resources/*.yaml"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "AUDITA_BR/tests"]
+testpaths = ["tests", "docs/interno/AUDITA_BR/tests"]
 pythonpath = ["src"]
 addopts = "-ra"
 
