@@ -5,6 +5,7 @@
 - **Data source:** TSE Open Data Portal and TSE result files, fetched by HTTP Range with a SHA-256 hash and receipt per file. Raw data stays out of git, and derived data is published as GitHub Releases.
 - **Reproduce:** `pip install -r requirements-report.lock`, then `python scripts/restore_edicao.py --tag dados-AAAA-MM-DD` and `python scripts/build_site.py`.
 - **Tests:** `pytest tests` (core package, `requirements.lock`) and `pytest tests_report` (analysis and site). GitHub Actions runs both on every push and pull request.
+- **Data flow diagram:** [`docs/DFD.md`](docs/DFD.md) (processes, data stores and what is checked at each step).
 
 Site: https://leandro-vpn.github.io/observatorio-do-voto/ · Sinalização não é acusação. O restante deste documento está em português.
 

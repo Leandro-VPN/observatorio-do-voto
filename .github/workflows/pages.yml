@@ -43,7 +43,7 @@ jobs:
 
   deploy:
     name: Publicar site (GitHub Pages)
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: [testes-core, testes-analise-e-site]
     runs-on: ubuntu-latest
     environment:

@@ -16,11 +16,11 @@ digraph nivel1 {
   P4 [shape=ellipse, label="4.0  Analyse\nmake_fiscalizacao_study.py → make_varredura_locais.py\nmake_documentos_metodo.py, make_mapa_fiscalizacao_2026t2.py\nstudies: padroes_*, anomalias_*, ultimo_voto_*\nindicators · permutation tests · priority list · edition manifest"]
   P5 [shape=ellipse, label="5.0  Build site\nbuild_site.py\nHTML, figure gallery, data packages, field dictionary"]
   P6 [shape=ellipse, label="6.0  Publish release\npublish_release.py\ndraft → upload → SHA-256 × GitHub digest → publish\nmanifesto-release.json"]
-  P7 [shape=ellipse, label="7.0  Validate and deploy (CI)\nGitHub Actions · .github/workflows/pages.yml\nruff · pytest tests (src/auditabr) · pytest tests_report\ndeploy site/ only when every job passes"]
+  P7 [shape=ellipse, label="7.0  Validate and deploy (CI)\nGitHub Actions · .github/workflows/pages.yml\nruff · pytest tests (src/auditabr) · pytest tests_report\ndeploy site/ only from main, when every job passes"]
   P8 [shape=ellipse, label="8.0  Restore an edition\nrestore_edicao.py (public release, no token)\nSHA-256 of each package × manifest before extracting"]
 
   // ---- earlier scope (regional base), kept because CI tests it
-  P2b [shape=ellipse, color="#7a7a7a", fontcolor="#555555", label="2b  Regional base (earlier scope, local only)\nauditabr collect → parsers → pipeline\nvalidation, DuckDB snapshots, local API + dashboard"]
+  P9 [shape=ellipse, color="#7a7a7a", fontcolor="#555555", label="9.0  Regional base (earlier scope, local only)\nauditabr collect → parsers → pipeline\nvalidation, DuckDB snapshots, local API + dashboard"]
   D7  [shape=box, style="filled", fillcolor="#f3f1e9", color="#7a7a7a", fontcolor="#555555", label="D7  DuckDB snapshots + manifest\nstorage-regional/  (outside git)"]
 
   // ---- data stores
@@ -64,6 +64,6 @@ digraph nivel1 {
   D5 -> E2  [label="data packages + manifest\n(downloads)"]
 
   // ---- earlier scope
-  E1  -> P2b [label="official CSVs in scope\n(HTTP Range)", color="#7a7a7a", fontcolor="#777777"]
-  P2b -> D7  [label="validated records, snapshots", color="#7a7a7a", fontcolor="#777777"]
+  E1 -> P9 [label="official CSVs in scope\n(HTTP Range)", color="#7a7a7a", fontcolor="#777777"]
+  P9 -> D7 [label="validated records, snapshots", color="#7a7a7a", fontcolor="#777777"]
 }
