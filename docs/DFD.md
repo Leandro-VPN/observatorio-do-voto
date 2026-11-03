@@ -24,9 +24,9 @@ One system, two external parties: the TSE as the only data source, readers and r
 | 4.0 | Analyse | `make_fiscalizacao_study.py` → `make_varredura_locais.py`; `make_documentos_metodo.py`; `make_mapa_fiscalizacao_2026t2.py`; research studies (`padroes_*`, `anomalias_*`, `ultimo_voto_*`, …) | D2, plus D1 logs for the studies | D4 | `edicao.json` records the producing code SHA, parameters and the SHA-256 of every input parquet |
 | 5.0 | Build site | `build_site.py` | D4, `site/templates/`, `site/site_config.json` | D6 (`site/`), `site/pacotes/` (outside git) | nothing is typed by hand: the site is a function of D4 |
 | 6.0 | Publish release | `publish_release.py` | `site/pacotes/`, editorial package, `edicao.json` | D5 | the release is a draft until each asset's local SHA-256 equals the digest GitHub reports; `manifesto-release.json` lists hashes, code SHA, parameters and inputs; an existing tag is never replaced, a new revision (`-r2`) is created |
-| 7.0 | Validate and deploy (CI) | `.github/workflows/pages.yml` | D6, on every push and pull request | GitHub Pages | `ruff check src tests`; `pytest tests` (package); `pytest tests_report` (varredura and site); the deploy job needs both and runs only on `main` |
+| 7.0 | Validate and deploy (CI) | `.github/workflows/pages.yml` | D6, on every push and pull request | GitHub Pages | `ruff check src tests`; `pytest tests` (package); `pytest tests_report` (varredura and site); the deploy job needs both and runs only for `main` (on push or manual dispatch), never on a pull request |
 | 8.0 | Restore an edition | `restore_edicao.py` | D5 | D4 | SHA-256 of each package against the release manifest before anything is extracted; public release, no token |
-| 2b | Regional base (earlier scope) | `src/auditabr` (`collect`, `parsers`, `pipeline`, `storage`, `cli`) | TSE CSVs in scope | D7 | scope and schema validation, reconciliation issues, immutable DuckDB snapshots with manifest; this is what `pytest tests` covers |
+| 9.0 | Regional base (earlier scope) | `src/auditabr` (`collect`, `parsers`, `pipeline`, `storage`, `cli`) | TSE CSVs in scope | D7 | scope and schema validation, reconciliation issues, immutable DuckDB snapshots with manifest; this is what `pytest tests` covers |
 
 `parsers.py` and `pipeline.py` belong to the regional base only. The current varredura reads D2, which is produced by `uf_pipeline.py`.
 
@@ -47,7 +47,7 @@ One system, two external parties: the TSE as the only data source, readers and r
 1. **Capture.** Every file is checked against the ZIP it came from (CRC, size) and gets a receipt with its SHA-256.
 2. **Edition.** `edicao.json` ties every result to the code SHA, the parameters and the hash of each input.
 3. **Release.** Draft until the hashes match; manifest attached; an existing tag is never overwritten.
-4. **Deployment.** The site goes live only when ruff and both pytest suites pass.
+4. **Deployment.** The site goes live only from `main`, and only when ruff and both pytest suites pass.
 5. **Reproduction.** Anyone can rebuild the site from a release, hash-verified, without the raw data and without a token:
 
 ```bash

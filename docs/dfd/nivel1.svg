@@ -53,17 +53,17 @@
 <text xml:space="preserve" text-anchor="middle" x="965.74" y="-1063.12" font-family="Helvetica,sans-Serif" font-size="7.50" fill="#333333">manifest, BU, RDV, BU image,</text>
 <text xml:space="preserve" text-anchor="middle" x="965.74" y="-1054.12" font-family="Helvetica,sans-Serif" font-size="7.50" fill="#333333">urn certificate (HTTP Range)</text>
 </g>
-<!-- P2b -->
+<!-- P9 -->
 <g id="node11" class="node">
-<title>P2b</title>
+<title>P9</title>
 <ellipse fill="none" stroke="#7a7a7a" stroke-width="1.1" cx="1064.32" cy="-1122.37" rx="153.47" ry="27.29"/>
-<text xml:space="preserve" text-anchor="middle" x="1064.32" y="-1130.02" font-family="Helvetica,sans-Serif" font-size="8.50" fill="#555555">2b &#160;Regional base (earlier scope, local only)</text>
+<text xml:space="preserve" text-anchor="middle" x="1064.32" y="-1130.02" font-family="Helvetica,sans-Serif" font-size="8.50" fill="#555555">9.0 &#160;Regional base (earlier scope, local only)</text>
 <text xml:space="preserve" text-anchor="middle" x="1064.32" y="-1119.82" font-family="Helvetica,sans-Serif" font-size="8.50" fill="#555555">auditabr collect → parsers → pipeline</text>
 <text xml:space="preserve" text-anchor="middle" x="1064.32" y="-1109.62" font-family="Helvetica,sans-Serif" font-size="8.50" fill="#555555">validation, DuckDB snapshots, local API + dashboard</text>
 </g>
-<!-- E1&#45;&gt;P2b -->
+<!-- E1&#45;&gt;P9 -->
 <g id="edge22" class="edge">
-<title>E1&#45;&gt;P2b</title>
+<title>E1&#45;&gt;P9</title>
 <path fill="none" stroke="#7a7a7a" d="M792.43,-1214.8C824.52,-1209.36 860.26,-1202.11 892.32,-1192.88 929.99,-1182.03 970.73,-1165.78 1003.1,-1151.72"/>
 <polygon fill="#7a7a7a" stroke="#7a7a7a" points="1003.9,-1154.05 1009.33,-1148.99 1001.94,-1149.56 1003.9,-1154.05"/>
 <text xml:space="preserve" text-anchor="middle" x="981.71" y="-1186.13" font-family="Helvetica,sans-Serif" font-size="7.50" fill="#777777">official CSVs in scope</text>
@@ -236,7 +236,7 @@
 <text xml:space="preserve" text-anchor="middle" x="625.32" y="-132.26" font-family="Helvetica,sans-Serif" font-size="8.50">7.0 &#160;Validate and deploy (CI)</text>
 <text xml:space="preserve" text-anchor="middle" x="625.32" y="-122.06" font-family="Helvetica,sans-Serif" font-size="8.50">GitHub Actions · .github/workflows/pages.yml</text>
 <text xml:space="preserve" text-anchor="middle" x="625.32" y="-111.86" font-family="Helvetica,sans-Serif" font-size="8.50">ruff · pytest tests (src/auditabr) · pytest tests_report</text>
-<text xml:space="preserve" text-anchor="middle" x="625.32" y="-101.66" font-family="Helvetica,sans-Serif" font-size="8.50">deploy site/ only when every job passes</text>
+<text xml:space="preserve" text-anchor="middle" x="625.32" y="-101.66" font-family="Helvetica,sans-Serif" font-size="8.50">deploy site/ only from main, when every job passes</text>
 </g>
 <!-- P7&#45;&gt;E2 -->
 <g id="edge10" class="edge">
@@ -268,9 +268,9 @@
 <text xml:space="preserve" text-anchor="middle" x="1064.32" y="-1012.02" font-family="Helvetica,sans-Serif" font-size="8.50" fill="#555555">D7 &#160;DuckDB snapshots + manifest</text>
 <text xml:space="preserve" text-anchor="middle" x="1064.32" y="-1001.82" font-family="Helvetica,sans-Serif" font-size="8.50" fill="#555555">storage&#45;regional/ &#160;(outside git)</text>
 </g>
-<!-- P2b&#45;&gt;D7 -->
+<!-- P9&#45;&gt;D7 -->
 <g id="edge23" class="edge">
-<title>P2b&#45;&gt;D7</title>
+<title>P9&#45;&gt;D7</title>
 <path fill="none" stroke="#7a7a7a" d="M1064.32,-1094.81C1064.32,-1076.97 1064.32,-1053.59 1064.32,-1035.97"/>
 <polygon fill="#7a7a7a" stroke="#7a7a7a" points="1066.77,-1036.35 1064.32,-1029.35 1061.87,-1036.35 1066.77,-1036.35"/>
 <text xml:space="preserve" text-anchor="middle" x="1112.05" y="-1058.62" font-family="Helvetica,sans-Serif" font-size="7.50" fill="#777777">validated records, snapshots</text>
