@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import re
 import zipfile
@@ -25,34 +26,147 @@ KINDS = ("BIO_CONFIRMED", "ALT_MANUAL_CONFIRMED", "NO_BIOMETRIC_ENROLLMENT_CONFI
          "BIOGRAPHIC_ALTERNATIVE_CONFIRMED", "HABILITATION_UNCLASSIFIED", "HABILITATION_CONFLICT")
 
 
-def read_log(path: Path) -> bytes:
-    with path.open("rb") as stream:
-        signature = stream.read(8)
-    if signature.startswith(b"PK"):
-        with zipfile.ZipFile(path) as archive:
-            entries = safe_members(archive, max_member=MAX_LOG, max_total=MAX_LOG)
-            names = [i.filename for i in entries if PurePosixPath(i.filename).name == "logd.dat"]
-            if len(names) != 1:
-                raise ValueError("Contêiner sem logd.dat único")
-            return archive.read(names[0])
-    if signature.startswith(b"7z\xbc\xaf\x27\x1c"):
-        with py7zr.SevenZipFile(path) as archive:
+NESTED = (".jez", ".logjez")
+MAX_PACKAGE = 2 * MAX_LOG
+VOTE_LINE = b"\tVOTA\tO voto do eleitor foi computado\t"
+# "Seção Eleitoral: NNNN" na carga da urna, em latin-1 ou utf-8
+SECTION_LINE = re.compile(rb"Se(?:\xe7\xe3|\xc3\xa7\xc3\xa3)o Eleitoral: (\d{4})")
+
+
+def _is_zip(data: bytes) -> bool:
+    return data[:4] == b"PK\x03\x04"
+
+
+def _is_7z(data: bytes) -> bool:
+    return data[:6] == b"7z\xbc\xaf\x27\x1c"
+
+
+def read_log_members(data: bytes, depth: int = 0) -> list[tuple[int, bytes]]:
+    """Todos os logd.dat de um pacote (zip ou 7z) com a profundidade em que estão: o pacote de uma seção traz o log da
+    última urna e, quando houve troca de urna (contingência), os pacotes das urnas anteriores aninhados (.jez/.logjez)."""
+    if depth > 3 or len(data) > MAX_PACKAGE:
+        return []
+    out: list[tuple[int, bytes]] = []
+    if _is_zip(data):
+        with zipfile.ZipFile(io.BytesIO(data)) as archive:
+            for entry in safe_members(archive, max_member=MAX_LOG, max_total=MAX_PACKAGE):
+                name = PurePosixPath(entry.filename.replace("\\", "/")).name.lower()
+                if name == "logd.dat":
+                    out.append((depth, archive.read(entry)))
+                elif name.endswith(NESTED):
+                    out += read_log_members(archive.read(entry), depth + 1)
+    elif _is_7z(data):
+        with py7zr.SevenZipFile(io.BytesIO(data)) as archive:
             entries = archive.list()
-            if len(entries) > 100 or sum(e.uncompressed for e in entries) > MAX_LOG:
+            if len(entries) > 100 or sum(e.uncompressed for e in entries) > MAX_PACKAGE:
                 raise ValueError("7z excede limite de extração")
             for item in entries:
                 name = item.filename.replace("\\", "/")
                 if PurePosixPath(name).is_absolute() or ".." in PurePosixPath(name).parts or ":" in name or item.is_symlink:
                     raise ValueError("7z contém entrada insegura")
-            names = [e.filename for e in entries if PurePosixPath(e.filename).name == "logd.dat"]
-            if len(names) != 1:
-                raise ValueError("7z sem logd.dat único")
-            factory = BytesIOFactory(MAX_LOG)
-            archive.extract(targets=names, factory=factory)
-            return factory.get(names[0]).read()
-    if path.name.lower() == "logd.dat" and path.stat().st_size <= MAX_LOG:
+            wanted = [e.filename for e in entries
+                      if PurePosixPath(e.filename.replace("\\", "/")).name.lower() == "logd.dat"
+                      or PurePosixPath(e.filename.replace("\\", "/")).name.lower().endswith(NESTED)]
+            if wanted:
+                factory = BytesIOFactory(MAX_PACKAGE)
+                archive.extract(targets=wanted, factory=factory)
+                for name in wanted:
+                    blob = factory.get(name).read()
+                    if PurePosixPath(name.replace("\\", "/")).name.lower() == "logd.dat":
+                        out.append((depth, blob))
+                    else:
+                        out += read_log_members(blob, depth + 1)
+    return out
+
+
+def _first_line(raw: bytes) -> bytes:
+    return raw[: raw.find(b"\n")] if b"\n" in raw else raw[:200]
+
+
+def _votes_on(raw: bytes, day: bytes) -> int:
+    n, i = 0, raw.find(VOTE_LINE)
+    while i >= 0:
+        n += raw.startswith(day, raw.rfind(b"\n", 0, i) + 1)
+        i = raw.find(VOTE_LINE, i + len(VOTE_LINE))
+    return n
+
+
+def _vote_day(logs: list[bytes]) -> bytes | None:
+    """Dia com mais votos computados entre os logs (o dia da eleição para que serve o pacote)."""
+    days: Counter = Counter()
+    for raw in logs:
+        i = raw.find(VOTE_LINE)
+        while i >= 0:
+            start = raw.rfind(b"\n", 0, i) + 1
+            days[raw[start:start + 10]] += 1
+            i = raw.find(VOTE_LINE, i + len(VOTE_LINE))
+    return days.most_common(1)[0][0] if days else None
+
+
+def _start_key(raw: bytes):
+    head = _first_line(raw)[:19]
+    try:
+        return datetime.strptime(head.decode("latin-1"), "%d/%m/%Y %H:%M:%S")
+    except ValueError:
+        return datetime.max
+
+
+def section_logs(data: bytes, section: int | None = None, day: bytes | None = None) -> list[bytes]:
+    """Os logs distintos das urnas que atenderam a seção, em ordem de início.
+    - Lê todos os logd.dat do pacote, inclusive os aninhados (urnas anteriores, quando houve troca).
+    - Descarta o log de urna de outra seção embalada no mesmo pacote (pela "Seção Eleitoral" declarada na carga);
+      a seção, quando não informada, é a que o log de primeiro nível declara.
+    - A identidade de um log é a sua primeira linha (instante em que o logd começou): duas exportações do mesmo log
+      (parcial e final) têm a mesma, urnas diferentes têm outra. Entre cópias fica a que tem mais votos no dia da
+      eleição e, em empate, a mais longa. O 3º campo da linha não serve de chave: em 2022 é igual em todas as urnas.
+    """
+    members = read_log_members(data)
+    if not members:
+        return []
+    if section is None:
+        declared = {int(s) for d, raw in members if d == 0 for s in SECTION_LINE.findall(raw)}
+        section = next(iter(declared)) if len(declared) == 1 else None
+    kept: list[bytes] = []
+    for _, raw in members:
+        secs = {int(s) for s in SECTION_LINE.findall(raw)}
+        if section is not None and secs and section not in secs and 0 not in secs:
+            continue
+        kept.append(raw)
+    if not kept:
+        return []
+    day = day or _vote_day(kept) or b""
+    best: dict[bytes, bytes] = {}
+    score: dict[bytes, tuple[int, int]] = {}
+    for raw in kept:
+        key = _first_line(raw)
+        s = (_votes_on(raw, day) if day else 0, len(raw))
+        if key not in best or s > score[key]:
+            best[key], score[key] = raw, s
+    return sorted(best.values(), key=_start_key)
+
+
+def read_log(path: Path, merge: bool = True) -> bytes:
+    """Conteúdo do log da seção. Com merge (padrão), os logs de todas as urnas que atenderam a seção, deduplicados e
+    concatenados em ordem de início (antes só o logd.dat de primeiro nível era lido, e as seções que trocaram de urna
+    ficavam só com a última). merge=False devolve apenas o logd.dat de primeiro nível, como antes."""
+    if path.name.lower() == "logd.dat":
+        if path.stat().st_size > MAX_LOG:
+            raise ValueError("logd.dat excede o limite")
         return path.read_bytes()
-    raise ValueError("PARSER_UNSUPPORTED: magic bytes/formato de log desconhecido")
+    data = path.read_bytes()
+    if not (_is_zip(data) or _is_7z(data)):
+        raise ValueError("PARSER_UNSUPPORTED: magic bytes/formato de log desconhecido")
+    if not merge:
+        outer = [raw for depth, raw in read_log_members(data) if depth == 0]
+        if len(outer) != 1:
+            raise ValueError("Contêiner sem logd.dat único")
+        return outer[0]
+    logs = section_logs(data)
+    if not logs:
+        raise ValueError("Contêiner sem logd.dat da seção")
+    if len(logs) == 1:
+        return logs[0]
+    return b"".join(raw if raw.endswith(b"\n") else raw + b"\r\n" for raw in logs)
 
 
 def classify_message(message: str):
