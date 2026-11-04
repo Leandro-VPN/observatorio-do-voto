@@ -65,3 +65,59 @@ def test_future_log_rejected_before_reading(tmp_path):
     with patch("auditabr.domain.today", return_value=date(2026, 10, 13)), pytest.raises(ValueError, match="FUTURE"):
         ingest_log(tmp_path, {}, 2026, 2, "AC", "01392", "0009", "0463")
 
+
+
+# ---------------------------------------------------------------- pacotes com mais de um log (troca de urna, exportação dupla)
+import io
+import zipfile
+
+from auditabr.logs import read_log, section_logs
+
+
+def _log(start, section, votes, day="25/10/2026"):
+    lines = [f"{start}\tINFO\t67305985\tLOGD\tInício das operações do logd\thash",
+             f"{start}\tINFO\t67305985\tGAP\tSeção Eleitoral: {section:04d}\thash"]
+    lines += [f"{day} {t}\tINFO\t67305985\tVOTA\tO voto do eleitor foi computado\thash" for t in votes]
+    return ("\r\n".join(lines) + "\r\n").encode("latin-1")
+
+
+def _zip(members):
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        for name, data in members:
+            z.writestr(name, data)
+    return buf.getvalue()
+
+
+def test_section_logs_merges_previous_urn_and_drops_other_section_and_duplicate_export():
+    first = _log("25/10/2026 07:50:00", 12, ["08:00:01", "08:10:02"])          # urna que começou o dia e foi trocada
+    first_partial = _log("25/10/2026 07:50:00", 12, ["08:00:01"])             # exportação parcial do mesmo log
+    other = _log("25/10/2026 07:55:00", 13, ["09:00:00"] * 3)                   # urna de outra seção embalada junto
+    last = _log("25/10/2026 10:30:00", 12, ["10:40:00", "10:41:00", "10:42:00"])  # urna de contingência (logd.dat externo)
+    package = _zip([("urna1-ME.jez", _zip([("logd.dat", first)])), ("urna1-parcial.jez", _zip([("logd.dat", first_partial)])),
+                    ("urna2.jez", _zip([("logd.dat", other)])), ("logd.dat", last)])
+    logs = section_logs(package)
+    assert [raw.count(b"foi computado") for raw in logs] == [2, 3]   # ordem de início; parcial e outra seção fora
+    merged = read_log_bytes(package)
+    assert merged.count(b"foi computado") == 5
+    assert merged.startswith(b"25/10/2026 07:50:00") and merged.rstrip().endswith(b"hash")
+
+
+def read_log_bytes(package, tmp_path=None):
+    import tempfile
+    from pathlib import Path
+    d = Path(tempfile.mkdtemp())
+    p = d / "o032210000100010012-log.jez"
+    p.write_bytes(package)
+    return read_log(p)
+
+
+def test_read_log_single_log_unchanged_and_outer_only_option():
+    only = _log("25/10/2026 07:50:00", 7, ["08:00:01"])
+    package = _zip([("logd.dat", only)])
+    import tempfile
+    from pathlib import Path
+    p = Path(tempfile.mkdtemp()) / "x-log.jez"
+    p.write_bytes(package)
+    assert read_log(p) == only
+    assert read_log(p, merge=False) == only
