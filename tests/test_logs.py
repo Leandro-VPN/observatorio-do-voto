@@ -1,8 +1,10 @@
+import io
+import zipfile
 from datetime import datetime
 
 import pytest
 
-from auditabr.logs import cutoff, parse_log, state_machine
+from auditabr.logs import cutoff, parse_log, read_log, section_logs, state_machine
 
 
 def events(kinds):
@@ -68,11 +70,6 @@ def test_future_log_rejected_before_reading(tmp_path):
 
 
 # ---------------------------------------------------------------- pacotes com mais de um log (troca de urna, exportação dupla)
-import io
-import zipfile
-
-from auditabr.logs import read_log, section_logs
-
 
 def _log(start, section, votes, day="25/10/2026"):
     lines = [f"{start}\tINFO\t67305985\tLOGD\tInício das operações do logd\thash",
