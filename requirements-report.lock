@@ -21,3 +21,5 @@ pypdf==6.21.2
 scikit-learn==1.9.1
 joblib==1.6.0
 threadpoolctl==3.7.0
+# scripts/janelas_horario.py (logs de 2022 em .logjez = 7z); versao do ambiente de 03/11/2026
+py7zr==1.1.4
