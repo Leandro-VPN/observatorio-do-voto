@@ -31,6 +31,8 @@ MAX_PACKAGE = 2 * MAX_LOG
 VOTE_LINE = b"\tVOTA\tO voto do eleitor foi computado\t"
 # "Seção Eleitoral: NNNN" na carga da urna, em latin-1 ou utf-8
 SECTION_LINE = re.compile(rb"Se(?:\xe7\xe3|\xc3\xa7\xc3\xa3)o Eleitoral: (\d{4})")
+# seção no nome do pacote publicado: o<pleito><uf><mun5><zona4><sec4>-log.jez (2024/2026) ou <...><sec4>.logjez (2022)
+NAME_SECTION = re.compile(r"(\d{4})(?:-log)?\.(?:jez|logjez)$", re.IGNORECASE)
 
 
 def _is_zip(data: bytes) -> bool:
@@ -111,7 +113,8 @@ def _start_key(raw: bytes):
         return datetime.max
 
 
-def section_logs(data: bytes, section: int | None = None, day: bytes | None = None) -> list[bytes]:
+def section_logs(data: bytes, section: int | None = None, day: bytes | None = None,
+                 section_hint: int | None = None) -> list[bytes]:
     """Os logs distintos das urnas que atenderam a seção, em ordem de início.
     - Lê todos os logd.dat do pacote, inclusive os aninhados (urnas anteriores, quando houve troca).
     - Descarta o log de urna de outra seção embalada no mesmo pacote (pela "Seção Eleitoral" declarada na carga);
@@ -124,8 +127,10 @@ def section_logs(data: bytes, section: int | None = None, day: bytes | None = No
     if not members:
         return []
     if section is None:
+        # A seção é a que o log de primeiro nível declara; quando ele declara mais de uma (urna de contingência que
+        # recuperou duas seções: "0000" e outra), vale a seção do nome do arquivo (section_hint).
         declared = {int(s) for d, raw in members if d == 0 for s in SECTION_LINE.findall(raw)}
-        section = next(iter(declared)) if len(declared) == 1 else None
+        section = next(iter(declared)) if len(declared) == 1 else section_hint
     kept: list[bytes] = []
     for _, raw in members:
         secs = {int(s) for s in SECTION_LINE.findall(raw)}
@@ -161,7 +166,8 @@ def read_log(path: Path, merge: bool = True) -> bytes:
         if len(outer) != 1:
             raise ValueError("Contêiner sem logd.dat único")
         return outer[0]
-    logs = section_logs(data)
+    hint = NAME_SECTION.search(path.name)
+    logs = section_logs(data, section_hint=int(hint.group(1)) if hint else None)
     if not logs:
         raise ValueError("Contêiner sem logd.dat da seção")
     if len(logs) == 1:

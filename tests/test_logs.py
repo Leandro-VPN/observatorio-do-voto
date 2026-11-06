@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pytest
 
-from auditabr.logs import cutoff, parse_log, read_log, section_logs, state_machine
+from auditabr.logs import NAME_SECTION, cutoff, parse_log, read_log, section_logs, state_machine
 
 
 def events(kinds):
@@ -98,6 +98,26 @@ def test_section_logs_merges_previous_urn_and_drops_other_section_and_duplicate_
     merged = read_log_bytes(package)
     assert merged.count(b"foi computado") == 5
     assert merged.startswith(b"25/10/2026 07:50:00") and merged.rstrip().endswith(b"hash")
+
+
+def test_contingency_log_declaring_two_sections_uses_the_file_name_section():
+    # Caso real (ES 57932/9/85, 2026 T2): a urna de contingência (logd.dat externo, sem votos) declara "0000" e depois 112,
+    # e o pacote da seção 85 traz aninhados os logs das urnas das seções 85 e 112. Sem a seção do nome do arquivo, as duas
+    # somavam (612 votos no log contra 308 no BU).
+    import tempfile
+    from pathlib import Path
+    urn85 = _log("22/09/2026 10:42:38", 85, ["08:00:01"] * 3)
+    urn112 = _log("24/09/2026 10:35:34", 112, ["08:00:01"] * 4)
+    cont = _log("22/09/2026 09:28:22", 0, []) + "25/10/2026 19:39:53\tINFO\t67305985\tGAP\tSeção Eleitoral: 0112\thash\r\n".encode("latin-1")
+    package = _zip([("u85.jez", _zip([("logd.dat", urn85)])), ("u112.jez", _zip([("logd.dat", urn112)])), ("logd.dat", cont)])
+    assert sum(r.count(b"foi computado") for r in section_logs(package)) == 7            # ambíguo sem a dica: soma as duas
+    assert [r.count(b"foi computado") for r in section_logs(package, section_hint=85)] == [0, 3]
+    d = Path(tempfile.mkdtemp())
+    for name, votos in [("o03221es5793200090085-log.jez", 3), ("o03221es5793200090112-log.jez", 4), ("o00407-5793200090085.logjez", 3)]:
+        p = d / name
+        p.write_bytes(package)
+        assert read_log(p).count(b"foi computado") == votos, name
+    assert NAME_SECTION.search("o00452ac0100700090001-log.jez").group(1) == "0001"
 
 
 def read_log_bytes(package, tmp_path=None):
